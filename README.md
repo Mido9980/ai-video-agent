@@ -14,6 +14,14 @@ A free, fully in-browser AI video agent. Write a short idea or paste a full scri
 - 💬 **محادثات محفوظة** — chats stored in localStorage
 - 🖥️ **وضع خادم اختياري** — connect a FastAPI + FFmpeg backend for multi-user, long-form rendering (edge-tts voices)
 
+## 📱 أندرويد APK / Android APK
+
+Download the signed APK — the whole app is bundled inside, works **100% offline** after install:
+
+https://github.com/Mido9980/ai-video-agent/releases/download/v1.0/AI-Video-Agent-EASYCODE.apk
+
+> ثبّته من "مصادر غير معروفة" (Settings → Security) ثم افتحه عادي. متاح أيضاً كـ PWA تتثبت من كروم مباشرة.
+
 ## 🚀 التشغيل / Run
 
 Just open `index.html` in any modern browser. That's it — everything runs locally.
