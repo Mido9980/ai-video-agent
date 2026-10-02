@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>AI Video Agent — EASY CODE</title>
+<style>
+  :root{
+    --bg:#0a0a0b; --bg-2:#111113; --bg-3:#17171a; --bg-4:#1e1e22;
+    --line:#26262b; --line-2:#33333a;
+    --txt:#f4f4f5; --txt-2:#a1a1aa; --txt-3:#71717a;
+    --accent:#e5e5e5; --accent-2:#c9c9cf;
+    --radius:16px; --radius-sm:10px;
+    --sidebar:280px;
+    --font:"Inter","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--txt); font-family:var(--font);
+    font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#2a2a30;border-radius:8px;border:2px solid var(--bg)}
+  ::-webkit-scrollbar-thumb:hover{background:#3a3a42}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  /* ---------- layout ---------- */
+  .app{display:flex;height:calc(100vh - 34px);height:calc(100dvh - 34px);width:100%}
+  .demo-banner{
+    height:34px;display:flex;align-items:center;justify-content:center;gap:8px;
+    background:linear-gradient(90deg,#1a1a20,#24242c);border-bottom:1px solid var(--line-2);
+    color:var(--txt-2);font-size:12px;padding:0 14px;text-align:center;overflow:hidden;
+  }
+  .demo-banner b{color:var(--txt);font-weight:600}
+  @media (max-width:640px){ .demo-banner{font-size:10.5px} }
+  .sidebar{
+    width:var(--sidebar);flex:0 0 var(--sidebar);background:var(--bg-2);
+    border-inline-end:1px solid var(--line);display:flex;flex-direction:column;
+    transition:transform .25s ease, margin .25s ease;z-index:40;
+  }
+  .sidebar-head{padding:14px 14px 10px;display:flex;align-items:center;gap:10px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:600;font-size:15px;letter-spacing:-.01em}
+  .brand .logo{
+    width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#f4f4f5,#8b8b93);
+    display:grid;place-items:center;color:#0a0a0b;font-weight:800;font-size:14px;
+  }
+  .new-chat{
+    margin:6px 12px 10px;padding:11px 14px;border-radius:12px;background:var(--bg-4);
+    border:1px solid var(--line);display:flex;align-items:center;gap:10px;
+    font-size:14px;font-weight:500;transition:background .15s,border-color .15s;
+  }
+  .new-chat:hover{background:#26262c;border-color:var(--line-2)}
+  .side-label{padding:12px 18px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt-3)}
+  .conv-list{flex:1;overflow-y:auto;padding:0 8px 8px}
+  .conv{
+    display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;
+    font-size:13.5px;color:var(--txt-2);cursor:pointer;transition:background .12s,color .12s;
+    white-space:nowrap;overflow:hidden;
+  }
+  .conv:hover{background:var(--bg-3);color:var(--txt)}
+  .conv.active{background:var(--bg-4);color:var(--txt)}
+  .conv .t{flex:1;overflow:hidden;text-overflow:ellipsis}
+  .conv .del{opacity:0;font-size:15px;color:var(--txt-3);padding:0 2px;border-radius:6px}
+  .conv:hover .del{opacity:1}
+  .conv .del:hover{color:#f87171}
+  .side-foot{padding:10px 12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+  .side-btn{
+    display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;
+    font-size:13.5px;color:var(--txt-2);transition:background .12s,color .12s;text-align:start;width:100%;
+  }
+  .side-btn:hover{background:var(--bg-3);color:var(--txt)}
+  .dot{width:7px;height:7px;border-radius:50%;background:#4ade80;flex:0 0 auto}
+  .dot.off{background:#71717a}
+
+  /* ---------- main ---------- */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
+  .topbar{
+    height:56px;flex:0 0 56px;display:flex;align-items:center;gap:10px;
+    padding:0 14px;border-bottom:1px solid var(--line);background:rgba(10,10,11,.85);
+    backdrop-filter:blur(12px);z-index:20;
+  }
+  .icon-btn{
+    width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+    color:var(--txt-2);transition:background .12s,color .12s;
+  }
+  .icon-btn:hover{background:var(--bg-3);color:var(--txt)}
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;
+    background:var(--bg-3);border:1px solid var(--line);font-size:12.5px;color:var(--txt-2);
+  }
+  .chip b{color:var(--txt);font-weight:600}
+  .spacer{flex:1}
+  .hamburger{display:none}
+
+  .scroll{flex:1;overflow-y:auto;scroll-behavior:smooth}
+  .wrap{max-width:820px;margin:0 auto;padding:0 20px 40px}
+
+  /* ---------- empty state ---------- */
+  .empty{
+    min-height:calc(100vh - 56px - 150px);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:40px 20px 20px;
+  }
+  .empty h1{font-size:clamp(28px,5vw,44px);font-weight:600;letter-spacing:-.02em;margin-bottom:10px}
+  .empty p{color:var(--txt-2);font-size:15px;max-width:520px;margin-bottom:30px}
+  .sugg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;max-width:640px}
+  .sugg button{
+    text-align:start;padding:15px 16px;border-radius:14px;background:var(--bg-2);
+    border:1px solid var(--line);transition:background .15s,border-color .15s,transform .15s;
+  }
+  .sugg button:hover{background:var(--bg-3);border-color:var(--line-2);transform:translateY(-1px)}
+  .sugg .st{font-size:13.5px;font-weight:600;margin-bottom:3px}
+  .sugg .sd{font-size:12.5px;color:var(--txt-3);line-height:1.45}
+
+  /* ---------- messages ---------- */
+  .msg{margin-top:26px;display:flex;gap:14px}
+  .msg .av{
+    width:30px;height:30px;border-radius:9px;flex:0 0 30px;display:grid;place-items:center;
+    font-size:13px;font-weight:700;
+  }
+  .msg.user .av{background:var(--bg-4);color:var(--txt-2);border:1px solid var(--line)}
+  .msg.bot .av{background:linear-gradient(135deg,#f4f4f5,#8b8b93);color:#0a0a0b}
+  .msg .body{flex:1;min-width:0;padding-top:3px}
+  .msg .who{font-size:12.5px;color:var(--txt-3);margin-bottom:5px;font-weight:500}
+  .msg .text{white-space:pre-wrap;word-wrap:break-word;font-size:15px}
+  .msg.user .text{color:var(--txt)}
+
+  .card{
+    margin-top:12px;border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--bg-2);overflow:hidden;
+  }
+  .card-head{
+    padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;
+    gap:10px;font-size:13px;color:var(--txt-2);
+  }
+  .card-head b{color:var(--txt);font-weight:600;font-size:13.5px}
+  .card-body{padding:16px}
+  .plan-title{font-size:17px;font-weight:600;margin-bottom:4px}
+  .plan-log{color:var(--txt-2);font-size:13.5px;margin-bottom:14px}
+  .meta-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .tag{
+    font-size:11.5px;padding:4px 10px;border-radius:999px;background:var(--bg-4);
+    border:1px solid var(--line);color:var(--txt-2);
+  }
+  .swatches{display:flex;gap:6px;margin-inline-start:auto}
+  .sw{width:16px;height:16px;border-radius:5px;border:1px solid rgba(255,255,255,.12)}
+  .scenes{display:flex;flex-direction:column;gap:8px}
+  .scene{
+    display:flex;gap:12px;padding:11px 12px;border-radius:12px;background:var(--bg-3);
+    border:1px solid var(--line);
+  }
+  .scene .n{
+    width:26px;height:26px;flex:0 0 26px;border-radius:8px;background:var(--bg-4);
+    display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--txt-2);
+  }
+  .scene .sc{flex:1;min-width:0}
+  .scene .sh{font-size:13px;font-weight:600;margin-bottom:2px}
+  .scene .sv{font-size:12.5px;color:var(--txt-2);line-height:1.5}
+  .scene .vo{font-size:12.5px;color:var(--txt-3);margin-top:4px;font-style:italic}
+  .scene .dur{font-size:11.5px;color:var(--txt-3);white-space:nowrap}
+
+  .progress{margin-top:14px}
+  .bar{height:6px;border-radius:999px;background:var(--bg-4);overflow:hidden}
+  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8b8b93,#f4f4f5);transition:width .3s ease}
+  .pmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--txt-3);margin-top:7px}
+
+  .media{margin-top:14px;display:flex;flex-direction:column;gap:12px}
+  .media video{width:100%;border-radius:12px;background:#000;display:block;border:1px solid var(--line)}
+  .media img{width:100%;border-radius:12px;border:1px solid var(--line);display:block}
+  .dl{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:11px;
+    background:var(--bg-4);border:1px solid var(--line);font-size:13px;font-weight:500;
+    color:var(--txt);transition:background .15s,border-color .15s;text-decoration:none;
+  }
+  .btn:hover{background:#26262c;border-color:var(--line-2)}
+  .btn.primary{background:var(--accent);color:#0a0a0b;border-color:var(--accent)}
+  .btn.primary:hover{background:#fff}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* ---------- composer ---------- */
+  .composer-wrap{
+    flex:0 0 auto;padding:10px 20px 18px;background:linear-gradient(180deg,transparent,var(--bg) 30%);
+  }
+  .composer{
+    max-width:820px;margin:0 auto;background:var(--bg-2);border:1px solid var(--line);
+    border-radius:20px;padding:10px 12px 8px;transition:border-color .15s,box-shadow .15s;
+  }
+  .composer:focus-within{border-color:var(--line-2);box-shadow:0 0 0 3px rgba(255,255,255,.03)}
+  .composer textarea{
+    width:100%;background:transparent;border:none;outline:none;resize:none;
+    font-size:15px;line-height:1.55;max-height:200px;padding:6px 6px 2px;color:var(--txt);
+  }
+  .composer textarea::placeholder{color:var(--txt-3)}
+  .composer-row{display:flex;align-items:center;gap:8px;padding:4px 2px 0}
+  .send{
+    width:34px;height:34px;border-radius:10px;background:var(--accent);color:#0a0a0b;
+    display:grid;place-items:center;transition:background .15s,opacity .15s;
+  }
+  .send:hover{background:#fff}
+  .send:disabled{opacity:.35;cursor:not-allowed}
+  .hint{font-size:11.5px;color:var(--txt-3);text-align:center;margin-top:9px}
+
+  /* ---------- modal ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
+  }
+  .overlay.show{display:flex}
+  .modal{
+    width:100%;max-width:460px;background:var(--bg-2);border:1px solid var(--line);
+    border-radius:20px;padding:24px;max-height:90vh;overflow-y:auto;
+  }
+  .modal h2{font-size:19px;font-weight:600;margin-bottom:4px}
+  .modal .sub{color:var(--txt-2);font-size:13.5px;margin-bottom:20px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12.5px;color:var(--txt-2);margin-bottom:6px;font-weight:500}
+  .field input,.field select{
+    width:100%;padding:11px 13px;border-radius:11px;background:var(--bg-3);
+    border:1px solid var(--line);outline:none;transition:border-color .15s;
+  }
+  .field input:focus,.field select:focus{border-color:var(--line-2)}
+  .field .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .modal-actions{display:flex;gap:10px;margin-top:20px}
+  .modal-actions .btn{flex:1;justify-content:center}
+  .err{color:#f87171;font-size:12.5px;margin-top:10px;min-height:16px}
+  .switch{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+  .switch span{font-size:13.5px}
+  .toggle{width:42px;height:24px;border-radius:999px;background:var(--bg-4);position:relative;transition:background .2s;border:1px solid var(--line)}
+  .toggle.on{background:#3f3f46}
+  .toggle i{position:absolute;top:2px;inset-inline-start:2px;width:18px;height:18px;border-radius:50%;background:#a1a1aa;transition:transform .2s,background .2s}
+  .toggle.on i{transform:translateX(-18px);background:#f4f4f5}
+  html[dir="ltr"] .toggle.on i{transform:translateX(18px)}
+  .tabs{display:flex;gap:6px;background:var(--bg-3);padding:4px;border-radius:12px;margin-bottom:18px}
+  .tabs button{flex:1;padding:8px;border-radius:9px;font-size:13px;color:var(--txt-2);transition:background .15s,color .15s}
+  .tabs button.on{background:var(--bg-4);color:var(--txt)}
+  .note{font-size:12px;color:var(--txt-3);line-height:1.6;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  .note b{color:var(--txt-2)}
+
+  .toast{
+    position:fixed;bottom:24px;inset-inline-start:50%;transform:translateX(50%);
+    background:var(--bg-4);border:1px solid var(--line-2);padding:11px 18px;border-radius:12px;
+    font-size:13px;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;
+  }
+  .toast.show{opacity:1;transform:translateX(50%) translateY(-4px)}
+
+  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:35;display:none}
+  .backdrop.show{display:block}
+
+  @media (max-width:860px){
+    .sidebar{position:fixed;inset-block:0;inset-inline-start:0;transform:translateX(100%)}
+    html[dir="ltr"] .sidebar{transform:translateX(-100%)}
+    .sidebar.open{transform:translateX(0)}
+    .hamburger{display:grid}
+    .sugg{grid-template-columns:1fr}
+    .wrap{padding:0 14px 30px}
+    .composer-wrap{padding:8px 12px 14px}
+    .msg{gap:10px}
+  }
+</style>
+</head>
+<body>
+<div class="demo-banner">
+  <span>⚡ <b>EASY CODE</b> — <span id="tBanner"></span></span>
+</div>
+<div class="app">
+  <!-- sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <div class="brand"><span class="logo">V</span><span>AI Video Agent</span></div>
+    </div>
+    <button class="new-chat" id="newChat">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      <span id="tNewChat">محادثة جديدة</span>
+    </button>
+    <div class="side-label" id="tConvs">المحادثات</div>
+    <div class="conv-list" id="convList"></div>
+    <div class="side-foot">
+      <button class="side-btn" id="openSettings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span id="tSettings">الإعدادات</span>
+      </button>
+      <button class="side-btn" id="openAccount">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span id="acctLabel">الحساب</span>
+      </button>
+      <div class="side-btn" style="cursor:default">
+        <span class="dot" id="modeDot"></span><span id="modeLabel">المحرّك المحلي (مجاني)</span>
+      </div>
+    </div>
+  </aside>
+  <div class="backdrop" id="backdrop"></div>
+
+  <!-- main -->
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn hamburger" id="hamburger" aria-label="القائمة">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <span class="chip"><b>AI Video Agent</b></span>
+      <span class="chip" id="engineChip">محرّك مجاني</span>
+      <select id="langSel" title="Language" style="background:var(--bg-3);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12.5px;color:var(--txt-2);outline:none;cursor:pointer"></select>
+      <div class="spacer"></div>
+      <button class="icon-btn" id="topSettings" aria-label="الإعدادات">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </header>
+
+    <div class="scroll" id="scroll">
+      <div class="wrap" id="wrap">
+        <section class="empty" id="empty">
+          <h1 id="tEmptyTitle">كيف يمكنني مساعدتك؟</h1>
+          <p id="tEmptySub">اكتب فكرة قصيرة أو الصق سكربتاً كاملاً، وسأحسّن البرومبت، وأبني خطة المشاهد، ثم أولّد الفيديو مع صورة معاينة (storyboard).</p>
+          <div class="sugg" id="sugg"></div>
+        </section>
+        <div id="messages"></div>
+      </div>
+    </div>
+
+    <div class="composer-wrap">
+      <div class="composer">
+        <textarea id="input" rows="1" placeholder="اكتب فكرة الفيديو… مثال: فيديو سينمائي عن الطاقة الشمسية في الصحراء"></textarea>
+        <div class="composer-row">
+          <button class="icon-btn" id="attachBtn" title="استيراد سكربت">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <input type="file" id="fileInput" accept=".txt,.md,.srt,.json" hidden />
+          <div class="spacer"></div>
+          <button class="send" id="send" disabled aria-label="إرسال">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="hint" id="tHint"></div>
+    </div>
+  </main>
+</div>
+
+<!-- settings modal -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal">
+    <h2 id="tSettingsTitle">الإعدادات</h2>
+    <div class="sub" id="tSettingsSub"></div>
+    <div class="field">
+      <label id="tLabelSeconds"></label>
+      <input type="number" id="setSeconds" min="10" max="600" step="5" value="60" />
+    </div>
+    <div class="field">
+      <label id="tLabelRes"></label>
+      <select id="setRes">
+        <option value="1280x720">720p — 1280×720</option>
+        <option value="1920x1080" selected>1080p — 1920×1080</option>
+        <option value="2560x1440">1440p — 2560×1440</option>
+        <option value="3840x2160">4K — 3840×2160</option>
+      </select>
+    </div>
+    <div class="field">
+      <label id="tLabelFps"></label>
+      <select id="setFps">
+        <option value="24">24 fps</option>
+        <option value="30" selected>30 fps</option>
+        <option value="60">60 fps</option>
+      </select>
+    </div>
+    <div class="field">
+      <label id="tLabelVoice"></label>
+      <select id="setVoice">
+        <option value="en-US-AriaNeural">Aria — إنجليزية (أنثى)</option>
+        <option value="en-US-GuyNeural">Guy — إنجليزية (ذكر)</option>
+        <option value="ar-EG-SalmaNeural">Salma — عربية (أنثى)</option>
+        <option value="ar-EG-ShakirNeural">Shakir — عربية (ذكر)</option>
+        <option value="none">بدون تعليق صوتي</option>
+      </select>
+    </div>
+    <div class="field">
+      <label id="tLabelMusic"></label>
+      <select id="setMusic">
+        <option value="calm">هادئة</option>
+        <option value="uplifting">متفائلة</option>
+        <option value="tense">متوترة</option>
+        <option value="epic">ملحمية</option>
+        <option value="warm">دافئة</option>
+        <option value="none">بدون موسيقى</option>
+      </select>
+    </div>
+    <div class="switch">
+      <span id="tLabelLlm"></span>
+      <button class="toggle" id="setLlm"><i></i></button>
+    </div>
+    <div class="note" id="tNote"></div>
+    <div class="modal-actions">
+      <button class="btn" id="settingsClose"><span id="tClose">إغلاق</span></button>
+      <button class="btn primary" id="settingsSave"><span id="tSave">حفظ</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- account modal -->
+<div class="overlay" id="accountOverlay">
+  <div class="modal">
+    <h2 id="acctTitle">الحساب</h2>
+    <div class="sub" id="acctSub">سجّل الدخول لحفظ محادثاتك على الخادم ومزامنتها بين الأجهزة.</div>
+    <div class="tabs" id="acctTabs">
+      <button data-tab="login" class="on" id="tTabLogin">تسجيل الدخول</button>
+      <button data-tab="signup" id="tTabSignup">حساب جديد</button>
+    </div>
+    <div class="field" id="nameField" style="display:none">
+      <label id="tLabelName"></label>
+      <input type="text" id="acctName" placeholder="اسمك" />
+    </div>
+    <div class="field">
+      <label id="tLabelEmail"></label>
+      <input type="email" id="acctEmail" placeholder="you@example.com" />
+    </div>
+    <div class="field">
+      <label id="tLabelPass"></label>
+      <input type="password" id="acctPass" placeholder="••••••••" />
+    </div>
+    <div class="field" id="serverField">
+      <label id="tLabelServer"></label>
+      <input type="text" id="acctServer" placeholder="https://your-server.example.com" />
+    </div>
+    <div class="err" id="acctErr"></div>
+    <div class="modal-actions">
+      <button class="btn" id="acctClose"><span id="tClose2">إغلاق</span></button>
+      <button class="btn primary" id="acctSubmit">تسجيل الدخول</button>
+    </div>
+    <div class="note" id="acctNote">
+      بدون تسجيل دخول، تُحفظ محادثاتك في هذا المتصفح فقط (localStorage).
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script id="i18n-data">window.__LANGS__=[["ar", "العربية", "🇪🇬"], ["en", "English", "🇺🇸"], ["fr", "Français", "🇫🇷"], ["es", "Español", "🇪🇸"], ["de", "Deutsch", "🇩🇪"], ["pt", "Português", "🇧🇷"], ["tr", "Türkçe", "🇹🇷"], ["ru", "Русский", "🇷🇺"], ["zh", "中文", "🇨🇳"], ["ja", "日本語", "🇯🇵"], ["hi", "हिन्दी", "🇮🇳"], ["id", "Indonesia", "🇮🇩"], ["fa", "فارسی", "🇮🇷"], ["ur", "اردو", "🇵🇰"]];
+window.__I18N__={"ar": {"banner": "التوليد يعمل داخل متصفحك مجاناً — بدون مفاتيح API. لربط محرّك الخادم (FFmpeg) من «الحساب».", "newChat": "محادثة جديدة", "convs": "المحادثات", "noConvs": "لا توجد محادثات بعد.", "settings": "الإعدادات", "account": "الحساب", "emptyTitle": "كيف يمكنني مساعدتك؟", "emptySub": "اكتب فكرة قصيرة أو الصق سكربتاً كاملاً، وسأحسّن البرومبت، وأبني خطة المشاهد، ثم أولّد الفيديو مع صورة معاينة (storyboard).", "inputPlaceholder": "اكتب فكرة الفيديو… مثال: فيديو سينمائي عن الطاقة الشمسية في الصحراء", "hint": "المحرّك المحلي مجاني بالكامل — بدون مفاتيح API. يمكنك ربط مزوّدين مدفوعين اختيارياً من الإعدادات.", "attachTitle": "استيراد سكربت", "settingsTitle": "الإعدادات", "settingsSub": "اضبط طول الفيديو، الدقة، الصوت والموسيقى.", "secondsLabel": "طول الفيديو المستهدف (ثانية)", "resLabel": "الدقة", "fpsLabel": "معدل الإطارات", "voiceLabel": "الصوت (Voiceover)", "musicLabel": "الموسيقى", "llmLabel": "استخدام LLM لتحسين البرومبت (يتطلب مفتاح)", "note": "<b>مجاني دائماً:</b> تحسين البرومبت المحلي، الرسم بالـ Canvas، التوليد داخل المتصفح.<br/><b>مدفوع اختياري:</b> OpenAI، ElevenLabs، Replicate / Runway / Luma / Pika.", "close": "إغلاق", "save": "حفظ", "yourAccount": "حسابك", "acctSubLogin": "سجّل الدخول لحفظ محادثاتك على الخادم ومزامنتها بين الأجهزة.", "login": "تسجيل الدخول", "signup": "إنشاء حساب", "nameLabel": "الاسم", "emailLabel": "البريد الإلكتروني", "passLabel": "كلمة المرور", "serverLabel": "عنوان الخادم (اختياري — لتشغيل محرّك FFmpeg)", "enterEmailPass": "أدخل البريد وكلمة المرور", "welcome": "مرحباً ", "loggedOut": "تم تسجيل الخروج", "logout": "تسجيل الخروج", "savedOnServer": "محادثاتك محفوظة على الخادم.", "connectedTo": "متصل بالخادم: ", "noLoginNote": "بدون تسجيل دخول، تُحفظ محادثاتك في هذا المتصفح فقط (localStorage).", "localEngine": "المحرّك المحلي (مجاني)", "serverEngine": "الخادم (FFmpeg)", "freeChip": "محرّك مجاني", "serverChip": "محرّك الخادم", "enhancedPrompt": "البرومبت المحسّن", "localFree": "محلي مجاني", "planReady": "حسّنت فكرتك إلى خطة مشاهد كاملة. جاهز للتوليد.", "done": "اكتمل التوليد", "waiting": "في الانتظار…", "failed": "فشل التوليد", "dlVideo": "⬇ تحميل الفيديو", "dlPreview": "⬇ صورة المعاينة", "errorPrefix": "حدث خطأ: ", "failedPrefix": "فشل التوليد: ", "unknown": "خطأ غير معروف", "connLost": "انقطع الاتصال بالخادم", "buildingPreview": "بناء صورة المعاينة…", "rendering": "توليد الفيديو داخل المتصفح…", "doneToast": "تم توليد الفيديو بنجاح ✓", "serverDoneToast": "تم توليد الفيديو على الخادم ✓", "settingsSaved": "تم حفظ الإعدادات", "scriptImported": "تم استيراد السكربت", "noTitle": "فيديو بدون عنوان", "me": "أنا", "you": "أنت", "sec": "ث", "voiceNone": "بدون تعليق صوتي", "voiceFemale": "صوت أنثى", "voiceMale": "صوت ذكر"}, "en": {"banner": "Generation runs in your browser for free — no API keys. Connect an FFmpeg server from “Account”.", "newChat": "New chat", "convs": "Chats", "noConvs": "No chats yet.", "settings": "Settings", "account": "Account", "emptyTitle": "How can I help you?", "emptySub": "Write a short idea or paste a full script — I'll optimize the prompt, build the scene plan, then generate the video with a storyboard preview.", "inputPlaceholder": "Type your video idea… e.g. a cinematic video about solar energy in the desert", "hint": "The local engine is 100% free — no API keys. Optional paid providers can be connected in Settings.", "attachTitle": "Import script", "settingsTitle": "Settings", "settingsSub": "Set duration, resolution, voice and music.", "secondsLabel": "Target video length (seconds)", "resLabel": "Resolution", "fpsLabel": "Frame rate", "voiceLabel": "Voiceover", "musicLabel": "Music", "llmLabel": "Use an LLM to optimize the prompt (requires a key)", "note": "<b>Always free:</b> local prompt optimization, canvas rendering, in-browser generation.<br/><b>Optional paid:</b> OpenAI, ElevenLabs, Replicate / Runway / Luma / Pika.", "close": "Close", "save": "Save", "yourAccount": "Your account", "acctSubLogin": "Sign in to save your chats on the server and sync across devices.", "login": "Sign in", "signup": "Sign up", "nameLabel": "Name", "emailLabel": "Email", "passLabel": "Password", "serverLabel": "Server URL (optional — to run the FFmpeg engine)", "enterEmailPass": "Enter your email and password", "welcome": "Welcome, ", "loggedOut": "Signed out", "logout": "Sign out", "savedOnServer": "Your chats are saved on the server.", "connectedTo": "Connected to server: ", "noLoginNote": "Without signing in, your chats stay in this browser only (localStorage).", "localEngine": "Local engine (free)", "serverEngine": "Server (FFmpeg)", "freeChip": "Free engine", "serverChip": "Server engine", "enhancedPrompt": "Optimized prompt", "localFree": "local & free", "planReady": "I turned your idea into a full scene plan. Ready to generate.", "done": "Generation complete", "waiting": "Waiting…", "failed": "Generation failed", "dlVideo": "⬇ Download video", "dlPreview": "⬇ Download preview", "errorPrefix": "Error: ", "failedPrefix": "Generation failed: ", "unknown": "unknown error", "connLost": "Lost connection to the server", "buildingPreview": "Building the storyboard preview…", "rendering": "Rendering video in the browser…", "doneToast": "Video generated successfully ✓", "serverDoneToast": "Video generated on the server ✓", "settingsSaved": "Settings saved", "scriptImported": "Script imported", "noTitle": "Untitled video", "me": "Me", "you": "You", "sec": "s", "voiceNone": "No voiceover", "voiceFemale": "Female voice", "voiceMale": "Male voice"}, "fr": {"banner": "La génération fonctionne dans votre navigateur, gratuitement — sans clés API. Connectez un serveur FFmpeg depuis « Compte ».", "newChat": "Nouvelle discussion", "convs": "Discussions", "noConvs": "Aucune discussion.", "settings": "Paramètres", "account": "Compte", "emptyTitle": "Comment puis-je vous aider ?", "emptySub": "Écrivez une idée courte ou collez un script complet — j'optimise le prompt, je construis le plan de scènes, puis je génère la vidéo avec un aperçu storyboard.", "inputPlaceholder": "Écrivez votre idée de vidéo… ex. une vidéo cinématique sur l'énergie solaire dans le désert", "hint": "Le moteur local est 100% gratuit — sans clés API. Des fournisseurs payants optionnels se connectent dans les Paramètres.", "attachTitle": "Importer un script", "settingsTitle": "Paramètres", "settingsSub": "Réglez la durée, la résolution, la voix et la musique.", "secondsLabel": "Durée cible (secondes)", "resLabel": "Résolution", "fpsLabel": "Images par seconde", "voiceLabel": "Voix off", "musicLabel": "Musique", "llmLabel": "Utiliser un LLM pour optimiser le prompt (clé requise)", "note": "<b>Toujours gratuit :</b> optimisation locale du prompt, rendu canvas, génération dans le navigateur.<br/><b>Payant optionnel :</b> OpenAI, ElevenLabs, Replicate / Runway / Luma / Pika.", "close": "Fermer", "save": "Enregistrer", "yourAccount": "Votre compte", "acctSubLogin": "Connectez-vous pour sauvegarder vos discussions sur le serveur et les synchroniser.", "login": "Se connecter", "signup": "Créer un compte", "nameLabel": "Nom", "emailLabel": "E-mail", "passLabel": "Mot de passe", "serverLabel": "URL du serveur (optionnel — moteur FFmpeg)", "enterEmailPass": "Saisissez votre e-mail et mot de passe", "welcome": "Bienvenue, ", "loggedOut": "Déconnecté", "logout": "Se déconnecter", "savedOnServer": "Vos discussions sont sauvegardées sur le serveur.", "connectedTo": "Connecté au serveur : ", "noLoginNote": "Sans connexion, vos discussions restent dans ce navigateur (localStorage).", "localEngine": "Moteur local (gratuit)", "serverEngine": "Serveur (FFmpeg)", "freeChip": "Moteur gratuit", "serverChip": "Moteur serveur", "enhancedPrompt": "Prompt optimisé", "localFree": "local et gratuit", "planReady": "J'ai transformé votre idée en plan de scènes complet. Prêt à générer.", "done": "Génération terminée", "waiting": "En attente…", "failed": "Échec de la génération", "dlVideo": "⬇ Télécharger la vidéo", "dlPreview": "⬇ Télécharger l'aperçu", "errorPrefix": "Erreur : ", "failedPrefix": "Échec : ", "unknown": "erreur inconnue", "connLost": "Connexion au serveur perdue", "buildingPreview": "Création de l'aperçu storyboard…", "rendering": "Génération de la vidéo dans le navigateur…", "doneToast": "Vidéo générée avec succès ✓", "serverDoneToast": "Vidéo générée sur le serveur ✓", "settingsSaved": "Paramètres enregistrés", "scriptImported": "Script importé", "noTitle": "Vidéo sans titre", "me": "Moi", "you": "Vous", "sec": "s", "voiceNone": "Pas de voix off", "voiceFemale": "Voix féminine", "voiceMale": "Voix masculine"}, "es": {"banner": "La generación funciona en tu navegador gratis — sin claves API. Conecta un servidor FFmpeg desde «Cuenta».", "newChat": "Nueva conversación", "convs": "Conversaciones", "noConvs": "Aún no hay conversaciones.", "settings": "Ajustes", "account": "Cuenta", "emptyTitle": "¿Cómo puedo ayudarte?", "emptySub": "Escribe una idea breve o pega un guion completo — optimizo el prompt, construyo el plan de escenas y genero el vídeo con vista previa storyboard.", "inputPlaceholder": "Escribe tu idea de vídeo… ej. un vídeo cinematográfico sobre energía solar en el desierto", "hint": "El motor local es 100% gratis — sin claves API. Proveedores de pago opcionales en Ajustes.", "attachTitle": "Importar guion", "settingsTitle": "Ajustes", "settingsSub": "Ajusta duración, resolución, voz y música.", "secondsLabel": "Duración objetivo (segundos)", "resLabel": "Resolución", "fpsLabel": "Fotogramas por segundo", "voiceLabel": "Voz en off", "musicLabel": "Música", "llmLabel": "Usar un LLM para optimizar el prompt (requiere clave)", "note": "<b>Siempre gratis:</b> optimización local del prompt, renderizado en canvas, generación en el navegador.<br/><b>Pago opcional:</b> OpenAI, ElevenLabs, Replicate / Runway / Luma / Pika.", "close": "Cerrar", "save": "Guardar", "yourAccount": "Tu cuenta", "acctSubLogin": "Inicia sesión para guardar tus conversaciones en el servidor y sincronizarlas.", "login": "Iniciar sesión", "signup": "Crear cuenta", "nameLabel": "Nombre", "emailLabel": "Correo electrónico", "passLabel": "Contraseña", "serverLabel": "URL del servidor (opcional — motor FFmpeg)", "enterEmailPass": "Introduce tu correo y contraseña", "welcome": "Bienvenido, ", "loggedOut": "Sesión cerrada", "logout": "Cerrar sesión", "savedOnServer": "Tus conversaciones se guardan en el servidor.", "connectedTo": "Conectado al servidor: ", "noLoginNote": "Sin iniciar sesión, tus conversaciones permanecen en este navegador (localStorage).", "localEngine": "Motor local (gratis)", "serverEngine": "Servidor (FFmpeg)", "freeChip": "Motor gratis", "serverChip": "Motor del servidor", "enhancedPrompt": "Prompt optimizado", "localFree": "local y gratis", "planReady": "Convertí tu idea en un plan de escenas completo. Listo para generar.", "done": "Generación completada", "waiting": "Esperando…", "failed": "Falló la generación", "dlVideo": "⬇ Descargar vídeo", "dlPreview": "⬇ Descargar vista previa", "errorPrefix": "Error: ", "failedPrefix": "Fallo: ", "unknown": "error desconocido", "connLost": "Se perdió la conexión con el servidor", "buildingPreview": "Creando la vista previa storyboard…", "rendering": "Generando vídeo en el navegador…", "doneToast": "Vídeo generado con éxito ✓", "serverDoneToast": "Vídeo generado en el servidor ✓", "settingsSaved": "Ajustes guardados", "scriptImported": "Guion importado", "noTitle": "Vídeo sin título", "me": "Yo", "you": "Tú", "sec": "s", "voiceNone": "Sin voz en off", "voiceFemale": "Voz femenina", "voiceMale": "Voz masculina"}, "de": {"banner": "Die Generierung läuft kostenlos in deinem Browser — ohne API-Keys. Verbinde unter „Konto“ einen FFmpeg-Server.", "newChat": "Neuer Chat", "convs": "Chats", "noConvs": "Noch keine Chats.", "settings": "Einstellungen", "account": "Konto", "emptyTitle": "Wie kann ich helfen?", "emptySub": "Schreibe eine kurze Idee oder füge ein komplettes Skript ein — ich optimiere den Prompt, baue den Szenenplan und erzeuge das Video mit Storyboard-Vorschau.", "inputPlaceholder": "Schreibe deine Videoidee… z. B. ein filmisches Video über Solarenergie in der Wüste", "hint": "Die lokale Engine ist komplett kostenlos — ohne API-Keys. Optionale kostenpflichtige Anbieter in den Einstellungen.", "attachTitle": "Skript importieren", "settingsTitle": "Einstellungen", "settingsSub": "Dauer, Auflösung, Stimme und Musik festlegen.", "secondsLabel": "Ziel-Länge (Sekunden)", "resLabel": "Auflösung", "fpsLabel": "Bildrate", "voiceLabel": "Sprecherstimme", "musicLabel": "Musik", "llmLabel": "LLM zur Prompt-Optimierung verwenden (Key erforderlich)", "note": "<b>Immer kostenlos:</b> lokale Prompt-Optimierung, Canvas-Rendering, Generierung im Browser.<br/><b>Optional kostenpflichtig:</b> OpenAI, ElevenLabs, Replicate / Runway / Luma / Pika.", "close": "Schließen", "save": "Speichern", "yourAccount": "Dein Konto", "acctSubLogin": "Melde dich an, um deine Chats auf dem Server zu speichern und zu synchronisieren.", "login": "Anmelden", "signup": "Registrieren", "nameLabel": "Name", "emailLabel": "E-Mail", "passLabel": "Passwort", "serverLabel": "Server-URL (optional — FFmpeg-Engine)", "enterEmailPass": "E-Mail und Passwort eingeben", "welcome": "Willkommen, ", "loggedOut": "Abgemeldet", "logout": "Abmelden", "savedOnServer": "Deine Chats werden auf dem Server gespeichert.", "connectedTo": "Verbunden mit Server: ", "noLoginNote": "Ohne Anmeldung bleiben deine Chats nur in diesem Browser (localStorage).", "localEngine": "Lokale Engine (kostenlos)", "serverEngine": "Server (FFmpeg)", "freeChip": "Kostenlose Engine", "serverChip": "Server-Engine", "enhancedPrompt": "Optimierter Prompt", "localFree": "lokal & kostenlos", "planReady": "Ich habe deine Idee in einen kompletten Szenenplan verwandelt. Bereit zur Generierung.", "done": "Generierung abgeschlossen", "waiting": "Warten…", "failed": "Generierung fehlgeschlagen", "dlVideo": "⬇ Video herunterladen", "dlPreview": "⬇ Vorschau herunterladen", "errorPrefix": "Fehler: ", "failedPrefix": "Fehlgeschlagen: ", "unknown": "unbekannter Fehler", "connLost": "Verbindung zum Server verloren", "buildingPreview": "Storyboard-Vorschau wird erstellt…", "rendering": "Video wird im Browser gerendert…", "doneToast": "Video erfolgreich generiert ✓", "serverDoneToast": "Video auf dem Server generiert ✓", "settingsSaved": "Einstellungen gespeichert", "scriptImported": "Skript importiert", "noTitle": "Video ohne Titel", "me": "Ich", "you": "Du", "sec": "s", "voiceNone": "Keine Stimme", "voiceFemale": "Weibliche Stimme", "voiceMale": "Männliche Stimme"}, "pt": {"banner": "A geração roda no seu navegador de graça — sem chaves de API. Conecte um servidor FFmpeg em «Conta».", "newChat": "Nova conversa", "convs": "Conversas", "noConvs": "Ainda não há conversas.", "settings": "Configurações", "account": "Conta", "emptyTitle": "Como posso ajudar?", "emptySub": "Escreva uma ideia curta ou cole um roteiro completo — otimizo o prompt, construo o plano de cenas e gero o vídeo com prévia de storyboard.", "inputPlaceholder": "Escreva sua ideia de vídeo… ex. um vídeo cinematográfico sobre energia solar no deserto", "hint": "O motor local é 100% gratuito — sem chaves de API. Provedores pagos opcionais nas Configurações.", "attachTitle": "Importar roteiro", "settingsTitle": "Configurações", "settingsSub": "Ajuste duração, resolução, voz e música.", "secondsLabel": "Duração alvo (segundos)", "resLabel": "Resolução", "fpsLabel": "Taxa de quadros", "voiceLabel": "Narração", "musicLabel": "Música", "llmLabel": "Usar LLM para otimizar o prompt (requer chave)", "note": "<b>Sempre gratuito:</b> otimização local do prompt, renderização em canvas, geração no navegador.<br/><b>Pago opcional:</b> OpenAI, ElevenLabs, Replicate / Runway / Luma / Pika.", "close": "Fechar", "save": "Salvar", "yourAccount": "Sua conta", "acctSubLogin": "Entre para salvar suas conversas no servidor e sincronizar entre dispositivos.", "login": "Entrar", "signup": "Criar conta", "nameLabel": "Nome", "emailLabel": "E-mail", "passLabel": "Senha", "serverLabel": "URL do servidor (opcional — motor FFmpeg)", "enterEmailPass": "Informe e-mail e senha", "welcome": "Bem-vindo, ", "loggedOut": "Sessão encerrada", "logout": "Sair", "savedOnServer": "Suas conversas ficam salvas no servidor.", "connectedTo": "Conectado ao servidor: ", "noLoginNote": "Sem entrar, suas conversas ficam apenas neste navegador (localStorage).", "localEngine": "Motor local (grátis)", "serverEngine": "Servidor (FFmpeg)", "freeChip": "Motor grátis", "serverChip": "Motor do servidor", "enhancedPrompt": "Prompt otimizado", "localFree": "local e grátis", "planReady": "Transformei sua ideia em um plano de cenas completo. Pronto para gerar.", "done": "Geração concluída", "waiting": "Aguardando…", "failed": "Falha na geração", "dlVideo": "⬇ Baixar vídeo", "dlPreview": "⬇ Baixar prévia", "errorPrefix": "Erro: ", "failedPrefix": "Falha: ", "unknown": "erro desconhecido", "connLost": "Conexão com o servidor perdida", "buildingPreview": "Criando a prévia do storyboard…", "rendering": "Renderizando vídeo no navegador…", "doneToast": "Vídeo gerado com sucesso ✓", "serverDoneToast": "Vídeo gerado no servidor ✓", "settingsSaved": "Configurações salvas", "scriptImported": "Roteiro importado", "noTitle": "Vídeo sem título", "me": "Eu", "you": "Você", "sec": "s", "voiceNone": "Sem narração", "voiceFemale": "Voz feminina", "voiceMale": "Voz masculina"}, "tr": {"banner": "Oluşturma tarayıcında ücretsiz çalışır — API anahtarı gerekmez. FFmpeg sunucusunu «Hesap»tan bağla.", "newChat": "Yeni sohbet", "convs": "Sohbetler", "noConvs": "Henüz sohbet yok.", "settings": "Ayarlar", "account": "Hesap", "emptyTitle": "Nasıl yardımcı olabilirim?", "emptySub": "Kısa bir fikir yaz ya da tam bir senaryo yapıştır — promptu iyileştirir, sahne planını kurar, sonra videoyu storyboard önizlemesiyle üretirim.", "inputPlaceholder": "Video fikrini yaz… örn. çölde güneş enerjisi hakkında sinematik bir video", "hint": "Yerel motor tamamen ücretsiz — API anahtarı yok. İsteğe bağlı ücretli sağlayıcılar Ayarlar'dan bağlanır.", "attachTitle": "Senaryo içe aktar", "settingsTitle": "Ayarlar", "settingsSub": "Süre, çözünürlük, ses ve müziği ayarla.", "secondsLabel": "Hedef süre (saniye)", "resLabel": "Çözünürlük", "fpsLabel": "Kare hızı", "voiceLabel": "Seslendirme", "musicLabel": "Müzik", "llmLabel": "Promptu iyileştirmek için LLM kullan (anahtar gerekir)", "note": "<b>Her zaman ücretsiz:</b> yerel prompt iyileştirme, canvas render, tarayıcıda üretim.<br/><b>İsteğe bağlı ücretli:</b> OpenAI, ElevenLabs, Replicate / Runway / Luma / Pika.", "close": "Kapat", "save": "Kaydet", "yourAccount": "Hesabın", "acctSubLogin": "Sohbetlerini sunucuda kaydetmek ve cihazlar arasında senkronize etmek için giriş yap.", "login": "Giriş yap", "signup": "Hesap oluştur", "nameLabel": "İsim", "emailLabel": "E-posta", "passLabel": "Şifre", "serverLabel": "Sunucu adresi (isteğe bağlı — FFmpeg motoru)", "enterEmailPass": "E-posta ve şifreni gir", "welcome": "Hoş geldin, ", "loggedOut": "Çıkış yapıldı", "logout": "Çıkış yap", "savedOnServer": "Sohbetlerin sunucuda kayıtlı.", "connectedTo": "Sunucuya bağlı: ", "noLoginNote": "Giriş yapmadan sohbetlerin yalnızca bu tarayıcıda kalır (localStorage).", "localEngine": "Yerel motor (ücretsiz)", "serverEngine": "Sunucu (FFmpeg)", "freeChip": "Ücretsiz motor", "serverChip": "Sunucu motoru", "enhancedPrompt": "İyileştirilmiş prompt", "localFree": "yerel ve ücretsiz", "planReady": "Fikrini tam bir sahne planına dönüştürdüm. Üretime hazır.", "done": "Üretim tamamlandı", "waiting": "Bekleniyor…", "failed": "Üretim başarısız", "dlVideo": "⬇ Videoyu indir", "dlPreview": "⬇ Önizlemeyi indir", "errorPrefix": "Hata: ", "failedPrefix": "Başarısız: ", "unknown": "bilinmeyen hata", "connLost": "Sunucu bağlantısı koptu", "buildingPreview": "Storyboard önizlemesi oluşturuluyor…", "rendering": "Video tarayıcıda üretiliyor…", "doneToast": "Video başarıyla üretildi ✓", "serverDoneToast": "Video sunucuda üretildi ✓", "settingsSaved": "Ayarlar kaydedildi", "scriptImported": "Senaryo içe aktarıldı", "noTitle": "Adsız video", "me": "Ben", "you": "Sen", "sec": "sn", "voiceNone": "Seslendirme yok", "voiceFemale": "Kadın ses", "voiceMale": "Erkek ses"}, "ru": {"banner": "Генерация работает в вашем браузере бесплатно — без API-ключей. Сервер FFmpeg подключается в «Аккаунте».", "newChat": "Новый чат", "convs": "Чаты", "noConvs": "Пока нет чатов.", "settings": "Настройки", "account": "Аккаунт", "emptyTitle": "Чем я могу помочь?", "emptySub": "Напишите короткую идею или вставьте полный сценарий — я улучшу промпт, построю план сцен и сгенерирую видео с раскадровкой.", "inputPlaceholder": "Напишите идею видео… напр. кинематографичное видео о солнечной энергии в пустыне", "hint": "Локальный движок полностью бесплатен — без API-ключей. Платные провайдеры подключаются в настройках.", "attachTitle": "Импорт сценария", "settingsTitle": "Настройки", "settingsSub": "Настройте длительность, разрешение, голос и музыку.", "secondsLabel": "Целевая длительность (секунды)", "resLabel": "Разрешение", "fpsLabel": "Частота кадров", "voiceLabel": "Озвучка", "musicLabel": "Музыка", "llmLabel": "Использовать LLM для улучшения промпта (нужен ключ)", "note": "<b>Всегда бесплатно:</b> локальное улучшение промпта, отрисовка на canvas, генерация в браузере.<br/><b>Опционально платно:</b> OpenAI, ElevenLabs, Replicate / Runway / Luma / Pika.", "close": "Закрыть", "save": "Сохранить", "yourAccount": "Ваш аккаунт", "acctSubLogin": "Войдите, чтобы сохранять чаты на сервере и синхронизировать их между устройствами.", "login": "Войти", "signup": "Создать аккаунт", "nameLabel": "Имя", "emailLabel": "Эл. почта", "passLabel": "Пароль", "serverLabel": "Адрес сервера (опционально — движок FFmpeg)", "enterEmailPass": "Введите почту и пароль", "welcome": "Добро пожаловать, ", "loggedOut": "Вы вышли", "logout": "Выйти", "savedOnServer": "Ваши чаты сохранены на сервере.", "connectedTo": "Подключено к серверу: ", "noLoginNote": "Без входа чаты хранятся только в этом браузере (localStorage).", "localEngine": "Локальный движок (бесплатный)", "serverEngine": "Сервер (FFmpeg)", "freeChip": "Бесплатный движок", "serverChip": "Серверный движок", "enhancedPrompt": "Улучшенный промпт", "localFree": "локально и бесплатно", "planReady": "Я превратил вашу идею в полный план сцен. Готово к генерации.", "done": "Генерация завершена", "waiting": "Ожидание…", "failed": "Ошибка генерации", "dlVideo": "⬇ Скачать видео", "dlPreview": "⬇ Скачать превью", "errorPrefix": "Ошибка: ", "failedPrefix": "Сбой: ", "unknown": "неизвестная ошибка", "connLost": "Связь с сервером потеряна", "buildingPreview": "Создание раскадровки…", "rendering": "Рендеринг видео в браузере…", "doneToast": "Видео успешно сгенерировано ✓", "serverDoneToast": "Видео сгенерировано на сервере ✓", "settingsSaved": "Настройки сохранены", "scriptImported": "Сценарий импортирован", "noTitle": "Видео без названия", "me": "Я", "you": "Вы", "sec": "с", "voiceNone": "Без озвучки", "voiceFemale": "Женский голос", "voiceMale": "Мужской голос"}, "zh": {"banner": "生成完全在你的浏览器中免费运行 — 无需 API 密钥。可在「账户」中连接 FFmpeg 服务器。", "newChat": "新对话", "convs": "对话", "noConvs": "还没有对话。", "settings": "设置", "account": "账户", "emptyTitle": "我能帮你什么？", "emptySub": "写一个简短的想法或粘贴完整脚本 — 我会优化提示词、构建分镜计划，并生成带故事板预览的视频。", "inputPlaceholder": "写下你的视频创意… 例如：关于沙漠太阳能的电影感视频", "hint": "本地引擎完全免费 — 无需 API 密钥。可在设置中连接可选的付费服务商。", "attachTitle": "导入脚本", "settingsTitle": "设置", "settingsSub": "设置时长、分辨率、配音和音乐。", "secondsLabel": "目标时长（秒）", "resLabel": "分辨率", "fpsLabel": "帧率", "voiceLabel": "配音", "musicLabel": "音乐", "llmLabel": "使用 LLM 优化提示词（需要密钥）", "note": "<b>永久免费：</b>本地提示词优化、canvas 渲染、浏览器内生成。<br/><b>可选付费：</b>OpenAI、ElevenLabs、Replicate / Runway / Luma / Pika。", "close": "关闭", "save": "保存", "yourAccount": "你的账户", "acctSubLogin": "登录后可在服务器上保存对话并跨设备同步。", "login": "登录", "signup": "注册", "nameLabel": "姓名", "emailLabel": "邮箱", "passLabel": "密码", "serverLabel": "服务器地址（可选 — FFmpeg 引擎）", "enterEmailPass": "请输入邮箱和密码", "welcome": "欢迎，", "loggedOut": "已退出", "logout": "退出登录", "savedOnServer": "你的对话已保存在服务器上。", "connectedTo": "已连接服务器：", "noLoginNote": "不登录时，对话仅保存在此浏览器中（localStorage）。", "localEngine": "本地引擎（免费）", "serverEngine": "服务器（FFmpeg）", "freeChip": "免费引擎", "serverChip": "服务器引擎", "enhancedPrompt": "优化后的提示词", "localFree": "本地免费", "planReady": "我已把你的想法变成完整的分镜计划，可以开始生成。", "done": "生成完成", "waiting": "等待中…", "failed": "生成失败", "dlVideo": "⬇ 下载视频", "dlPreview": "⬇ 下载预览图", "errorPrefix": "错误：", "failedPrefix": "失败：", "unknown": "未知错误", "connLost": "与服务器的连接中断", "buildingPreview": "正在生成故事板预览…", "rendering": "正在浏览器中渲染视频…", "doneToast": "视频生成成功 ✓", "serverDoneToast": "视频已在服务器生成 ✓", "settingsSaved": "设置已保存", "scriptImported": "脚本已导入", "noTitle": "未命名视频", "me": "我", "you": "你", "sec": "秒", "voiceNone": "无配音", "voiceFemale": "女声", "voiceMale": "男声"}, "ja": {"banner": "生成はブラウザ内で無料で動作 — APIキー不要。「アカウント」からFFmpegサーバーに接続できます。", "newChat": "新しいチャット", "convs": "チャット", "noConvs": "チャットはまだありません。", "settings": "設定", "account": "アカウント", "emptyTitle": "何をお手伝いしましょうか？", "emptySub": "短いアイデアを書くか、完全な台本を貼り付けてください — プロンプトを最適化し、シーンプランを作成して、絵コンテプレビュー付きの動画を生成します。", "inputPlaceholder": "動画のアイデアを入力… 例：砂漠の太陽光発電についてのシネマティックな動画", "hint": "ローカルエンジンは完全無料 — APIキー不要。有料プロバイダーは設定から接続できます。", "attachTitle": "台本をインポート", "settingsTitle": "設定", "settingsSub": "長さ・解像度・音声・音楽を設定します。", "secondsLabel": "目標の長さ（秒）", "resLabel": "解像度", "fpsLabel": "フレームレート", "voiceLabel": "ナレーション", "musicLabel": "音楽", "llmLabel": "LLMでプロンプトを最適化（キーが必要）", "note": "<b>常に無料：</b>ローカルのプロンプト最適化、canvasレンダリング、ブラウザ内生成。<br/><b>オプション有料：</b>OpenAI、ElevenLabs、Replicate / Runway / Luma / Pika。", "close": "閉じる", "save": "保存", "yourAccount": "あなたのアカウント", "acctSubLogin": "サインインすると、チャットがサーバーに保存されデバイス間で同期されます。", "login": "ログイン", "signup": "新規登録", "nameLabel": "名前", "emailLabel": "メールアドレス", "passLabel": "パスワード", "serverLabel": "サーバーURL（任意 — FFmpegエンジン用）", "enterEmailPass": "メールとパスワードを入力してください", "welcome": "ようこそ、", "loggedOut": "ログアウトしました", "logout": "ログアウト", "savedOnServer": "チャットはサーバーに保存されています。", "connectedTo": "サーバーに接続：", "noLoginNote": "ログインしない場合、チャットはこのブラウザ内のみに保存されます（localStorage）。", "localEngine": "ローカルエンジン（無料）", "serverEngine": "サーバー（FFmpeg）", "freeChip": "無料エンジン", "serverChip": "サーバーエンジン", "enhancedPrompt": "最適化されたプロンプト", "localFree": "ローカル無料", "planReady": "アイデアを完全なシーンプランに変換しました。生成できます。", "done": "生成完了", "waiting": "待機中…", "failed": "生成に失敗しました", "dlVideo": "⬇ 動画をダウンロード", "dlPreview": "⬇ プレビューをダウンロード", "errorPrefix": "エラー：", "failedPrefix": "失敗：", "unknown": "不明なエラー", "connLost": "サーバーとの接続が切れました", "buildingPreview": "絵コンテプレビューを作成中…", "rendering": "ブラウザで動画をレンダリング中…", "doneToast": "動画の生成に成功しました ✓", "serverDoneToast": "サーバーで動画を生成しました ✓", "settingsSaved": "設定を保存しました", "scriptImported": "台本をインポートしました", "noTitle": "無題の動画", "me": "自分", "you": "あなた", "sec": "秒", "voiceNone": "ナレーションなし", "voiceFemale": "女性の声", "voiceMale": "男性の声"}, "hi": {"banner": "जनरेशन आपके ब्राउज़र में मुफ़्त चलती है — API की ज़रूरत नहीं। FFmpeg सर्वर «अकाउंट» से जोड़ें।", "newChat": "नई चैट", "convs": "चैट", "noConvs": "अभी कोई चैट नहीं।", "settings": "सेटिंग्स", "account": "अकाउंट", "emptyTitle": "मैं आपकी कैसे मदद कर सकता हूँ?", "emptySub": "एक छोटा आइडिया लिखें या पूरी स्क्रिप्ट पेस्ट करें — मैं प्रॉम्प्ट सुधारूँगा, सीन प्लान बनाऊँगा, फिर स्टोरीबोर्ड प्रीव्यू के साथ वीडियो जनरेट करूँगा।", "inputPlaceholder": "अपना वीडियो आइडिया लिखें… जैसे: रेगिस्तान में सोलर एनर्जी पर सिनेमैटिक वीडियो", "hint": "लोकल इंजन पूरी तरह मुफ़्त है — कोई API की नहीं। वैकल्पिक पेड प्रोवाइडर सेटिंग्स से जोड़ें।", "attachTitle": "स्क्रिप्ट इंपोर्ट करें", "settingsTitle": "सेटिंग्स", "settingsSub": "अवधि, रिज़ॉल्यूशन, आवाज़ और संगीत सेट करें।", "secondsLabel": "लक्ष्य लंबाई (सेकंड)", "resLabel": "रिज़ॉल्यूशन", "fpsLabel": "फ्रेम रेट", "voiceLabel": "वॉइसओवर", "musicLabel": "संगीत", "llmLabel": "प्रॉम्प्ट सुधारने के लिए LLM उपयोग करें (की चाहिए)", "note": "<b>हमेशा मुफ़्त:</b> लोकल प्रॉम्प्ट ऑप्टिमाइज़ेशन, canvas रेंडरिंग, ब्राउज़र में जनरेशन।<br/><b>वैकल्पिक सशुल्क:</b> OpenAI, ElevenLabs, Replicate / Runway / Luma / Pika.", "close": "बंद करें", "save": "सेव करें", "yourAccount": "आपका अकाउंट", "acctSubLogin": "साइन इन करें ताकि आपकी चैट सर्वर पर सेव हों और डिवाइस के बीच सिंक हों।", "login": "साइन इन", "signup": "अकाउंट बनाएँ", "nameLabel": "नाम", "emailLabel": "ईमेल", "passLabel": "पासवर्ड", "serverLabel": "सर्वर URL (वैकल्पिक — FFmpeg इंजन)", "enterEmailPass": "ईमेल और पासवर्ड डालें", "welcome": "स्वागत है, ", "loggedOut": "साइन आउट हो गए", "logout": "साइन आउट", "savedOnServer": "आपकी चैट सर्वर पर सेव हैं।", "connectedTo": "सर्वर से कनेक्टेड: ", "noLoginNote": "साइन इन किए बिना चैट सिर्फ़ इस ब्राउज़र में रहेंगी (localStorage)।", "localEngine": "लोकल इंजन (मुफ़्त)", "serverEngine": "सर्वर (FFmpeg)", "freeChip": "मुफ़्त इंजन", "serverChip": "सर्वर इंजन", "enhancedPrompt": "सुधारा हुआ प्रॉम्प्ट", "localFree": "लोकल और मुफ़्त", "planReady": "आपके आइडिया को पूरे सीन प्लान में बदल दिया। जनरेट करने के लिए तैयार।", "done": "जनरेशन पूरी", "waiting": "इंतज़ार…", "failed": "जनरेशन फेल", "dlVideo": "⬇ वीडियो डाउनलोड करें", "dlPreview": "⬇ प्रीव्यू डाउनलोड करें", "errorPrefix": "एरर: ", "failedPrefix": "फेल: ", "unknown": "अनजान एरर", "connLost": "सर्वर से कनेक्शन टूट गया", "buildingPreview": "स्टोरीबोर्ड प्रीव्यू बन रहा है…", "rendering": "ब्राउज़र में वीडियो रेंडर हो रहा है…", "doneToast": "वीडियो सफलतापूर्वक बन गया ✓", "serverDoneToast": "वीडियो सर्वर पर बना ✓", "settingsSaved": "सेटिंग्स सेव हुईं", "scriptImported": "स्क्रिप्ट इंपोर्ट हुई", "noTitle": "बिना नाम का वीडियो", "me": "मैं", "you": "आप", "sec": "से", "voiceNone": "वॉइसओवर नहीं", "voiceFemale": "महिला आवाज़", "voiceMale": "पुरुष आवाज़"}, "id": {"banner": "Pembuatan video berjalan gratis di browser kamu — tanpa kunci API. Hubungkan server FFmpeg dari «Akun».", "newChat": "Obrolan baru", "convs": "Obrolan", "noConvs": "Belum ada obrolan.", "settings": "Pengaturan", "account": "Akun", "emptyTitle": "Ada yang bisa saya bantu?", "emptySub": "Tulis ide singkat atau tempel skrip lengkap — saya optimalkan prompt, susun rencana adegan, lalu buat video dengan pratinjau storyboard.", "inputPlaceholder": "Tulis ide videomu… mis. video sinematik tentang energi matahari di gurun", "hint": "Mesin lokal 100% gratis — tanpa kunci API. Penyedia berbayar opsional bisa dihubungkan di Pengaturan.", "attachTitle": "Impor skrip", "settingsTitle": "Pengaturan", "settingsSub": "Atur durasi, resolusi, suara, dan musik.", "secondsLabel": "Durasi target (detik)", "resLabel": "Resolusi", "fpsLabel": "Kecepatan bingkai", "voiceLabel": "Suara narasi", "musicLabel": "Musik", "llmLabel": "Gunakan LLM untuk mengoptimalkan prompt (perlu kunci)", "note": "<b>Selalu gratis:</b> optimasi prompt lokal, rendering canvas, pembuatan di browser.<br/><b>Opsional berbayar:</b> OpenAI, ElevenLabs, Replicate / Runway / Luma / Pika.", "close": "Tutup", "save": "Simpan", "yourAccount": "Akun kamu", "acctSubLogin": "Masuk untuk menyimpan obrolan di server dan menyinkronkannya antar perangkat.", "login": "Masuk", "signup": "Daftar", "nameLabel": "Nama", "emailLabel": "Email", "passLabel": "Kata sandi", "serverLabel": "URL server (opsional — mesin FFmpeg)", "enterEmailPass": "Masukkan email dan kata sandi", "welcome": "Selamat datang, ", "loggedOut": "Telah keluar", "logout": "Keluar", "savedOnServer": "Obrolanmu tersimpan di server.", "connectedTo": "Terhubung ke server: ", "noLoginNote": "Tanpa masuk, obrolan hanya tersimpan di browser ini (localStorage).", "localEngine": "Mesin lokal (gratis)", "serverEngine": "Server (FFmpeg)", "freeChip": "Mesin gratis", "serverChip": "Mesin server", "enhancedPrompt": "Prompt yang dioptimalkan", "localFree": "lokal & gratis", "planReady": "Ide kamu sudah jadi rencana adegan lengkap. Siap dibuat.", "done": "Pembuatan selesai", "waiting": "Menunggu…", "failed": "Pembuatan gagal", "dlVideo": "⬇ Unduh video", "dlPreview": "⬇ Unduh pratinjau", "errorPrefix": "Kesalahan: ", "failedPrefix": "Gagal: ", "unknown": "kesalahan tidak diketahui", "connLost": "Koneksi ke server terputus", "buildingPreview": "Membuat pratinjau storyboard…", "rendering": "Merender video di browser…", "doneToast": "Video berhasil dibuat ✓", "serverDoneToast": "Video dibuat di server ✓", "settingsSaved": "Pengaturan disimpan", "scriptImported": "Skrip diimpor", "noTitle": "Video tanpa judul", "me": "Saya", "you": "Kamu", "sec": "dtk", "voiceNone": "Tanpa narasi", "voiceFemale": "Suara wanita", "voiceMale": "Suara pria"}, "fa": {"banner": "تولید ویدیو در مرورگر شما رایگان اجرا می‌شود — بدون کلید API. سرور FFmpeg را از «حساب» متصل کنید.", "newChat": "گفتگوی جدید", "convs": "گفتگوها", "noConvs": "هنوز گفتگویی نیست.", "settings": "تنظیمات", "account": "حساب", "emptyTitle": "چطور می‌توانم کمکت کنم؟", "emptySub": "یک ایده کوتاه بنویس یا متن کامل را بچسبان — پرامپت را بهینه می‌کنم، برنامه صحنه‌ها را می‌سازم و ویدیو را با پیش‌نمایش استوری‌برد تولید می‌کنم.", "inputPlaceholder": "ایده ویدیو را بنویس… مثلاً ویدیویی سینمایی درباره انرژی خورشیدی در بیابان", "hint": "موتور محلی کاملاً رایگان است — بدون کلید API. سرویس‌دهنده‌های اختیاری پولی از تنظیمات متصل می‌شوند.", "attachTitle": "وارد کردن متن", "settingsTitle": "تنظیمات", "settingsSub": "مدت، وضوح، صدا و موسیقی را تنظیم کنید.", "secondsLabel": "مدت هدف (ثانیه)", "resLabel": "وضوح", "fpsLabel": "نرخ فریم", "voiceLabel": "صدای گوینده", "musicLabel": "موسیقی", "llmLabel": "استفاده از LLM برای بهینه‌سازی پرامپت (نیاز به کلید)", "note": "<b>همیشه رایگان:</b> بهینه‌سازی محلی پرامپت، رندر canvas، تولید در مرورگر.<br/><b>اختیاری پولی:</b> OpenAI، ElevenLabs، Replicate / Runway / Luma / Pika.", "close": "بستن", "save": "ذخیره", "yourAccount": "حساب شما", "acctSubLogin": "وارد شوید تا گفتگوهایتان روی سرور ذخیره و بین دستگاه‌ها همگام‌سازی شود.", "login": "ورود", "signup": "ثبت‌نام", "nameLabel": "نام", "emailLabel": "ایمیل", "passLabel": "رمز عبور", "serverLabel": "آدرس سرور (اختیاری — موتور FFmpeg)", "enterEmailPass": "ایمیل و رمز عبور را وارد کنید", "welcome": "خوش آمدید، ", "loggedOut": "خارج شدید", "logout": "خروج", "savedOnServer": "گفتگوهای شما روی سرور ذخیره شده‌اند.", "connectedTo": "متصل به سرور: ", "noLoginNote": "بدون ورود، گفتگوها فقط در همین مرورگر می‌مانند (localStorage).", "localEngine": "موتور محلی (رایگان)", "serverEngine": "سرور (FFmpeg)", "freeChip": "موتور رایگان", "serverChip": "موتور سرور", "enhancedPrompt": "پرامپت بهینه‌شده", "localFree": "محلی و رایگان", "planReady": "ایده شما را به برنامه کامل صحنه‌ها تبدیل کردم. آماده تولید.", "done": "تولید کامل شد", "waiting": "در انتظار…", "failed": "تولید ناموفق", "dlVideo": "⬇ دانلود ویدیو", "dlPreview": "⬇ دانلود پیش‌نمایش", "errorPrefix": "خطا: ", "failedPrefix": "ناموفق: ", "unknown": "خطای ناشناخته", "connLost": "اتصال به سرور قطع شد", "buildingPreview": "ساخت پیش‌نمایش استوری‌برد…", "rendering": "رندر ویدیو در مرورگر…", "doneToast": "ویدیو با موفقیت ساخته شد ✓", "serverDoneToast": "ویدیو روی سرور ساخته شد ✓", "settingsSaved": "تنظیمات ذخیره شد", "scriptImported": "متن وارد شد", "noTitle": "ویدیو بدون عنوان", "me": "من", "you": "شما", "sec": "ث", "voiceNone": "بدون گوینده", "voiceFemale": "صدای زن", "voiceMale": "صدای مرد"}, "ur": {"banner": "ویڈیو بنانہ آپ کے براؤزر میں مفت چلتا ہے — API key کی ضرورت نہیں۔ FFmpeg سرور «اکاؤنٹ» سے جوڑیں۔", "newChat": "نئی چیٹ", "convs": "چیٹس", "noConvs": "ابھی کوئی چیٹ نہیں۔", "settings": "ترتیبات", "account": "اکاؤنٹ", "emptyTitle": "میں کیسے مدد کروں؟", "emptySub": "مختصر خیال لکھیں یا مکمل اسکرپٹ پیسٹ کریں — میں پرامپٹ بہتر بناؤں گا، مناظر کا پلان بناؤں گا، پھر اسٹوری بورڈ پیش نظارہ کے ساتھ ویڈیو بناؤں گا۔", "inputPlaceholder": "اپنا ویڈیو خیال لکھیں… مثلاً: صحرا میں سولر انرجی پر سینماٹک ویڈیو", "hint": "مقامی انجن بالکل مفت ہے — کوئی API key نہیں۔ اختیاری ادائہ شدہ سروسز ترتیبات سے جوڑی جا سکتی ہیں۔", "attachTitle": "اسکرپٹ درآمد کریں", "settingsTitle": "ترتیبات", "settingsSub": "دورانیہ، ریزولوشن، آواز اور موسیقی سیٹ کریں۔", "secondsLabel": "ہدف دورانیہ (سیکنڈ)", "resLabel": "ریزولوشن", "fpsLabel": "فریم ریٹ", "voiceLabel": "آواز", "musicLabel": "موسیقی", "llmLabel": "پرامپٹ بہتر بنانے کے لیے LLM استعمال کریں (key درکار)", "note": "<b>ہمیشہ مفت:</b> مقامی پرامپٹ آپٹیمائزیشن، canvas رینڈرنگ، براؤزر میں بنانا۔<br/><b>اختیاری ادائہ:</b> OpenAI، ElevenLabs، Replicate / Runway / Luma / Pika۔", "close": "بند کریں", "save": "محفوظ کریں", "yourAccount": "آپ کا اکاؤنٹ", "acctSubLogin": "سائن اِن کریں تاکہ چیٹس سرور پر محفوظ ہوں اور ڈیوائسز کے درمیان سنک ہوں۔", "login": "سائن اِن", "signup": "اکاؤنٹ بنائیں", "nameLabel": "نام", "emailLabel": "ای میل", "passLabel": "پاس ورڈ", "serverLabel": "سرور پتہ (اختیاری — FFmpeg انجن)", "enterEmailPass": "ای میل اور پاس ورڈ درج کریں", "welcome": "خوش آمدید، ", "loggedOut": "سائن آؤٹ ہو گئے", "logout": "سائن آؤٹ", "savedOnServer": "آپ کی چیٹس سرور پر محفوظ ہیں۔", "connectedTo": "سرور سے منسلک: ", "noLoginNote": "سائن اِن کے بغیر چیٹس صرف اسی براؤزر میں رہیں گی (localStorage)۔", "localEngine": "مقامی انجن (مفت)", "serverEngine": "سرور (FFmpeg)", "freeChip": "مفت انجن", "serverChip": "سرور انجن", "enhancedPrompt": "بہتر بنایا گیا پرامپٹ", "localFree": "مقامی اور مفت", "planReady": "آپ کے خیال کو مکمل مناظر کے پلان میں بدل دیا۔ بنانے کے لیے تیار۔", "done": "بنانا مکمل", "waiting": "انتظار…", "failed": "بنانے میں ناکام", "dlVideo": "⬇ ویڈیو ڈاؤن لوڈ کریں", "dlPreview": "⬇ پیش نظارہ ڈاؤن لوڈ کریں", "errorPrefix": "خرابی: ", "failedPrefix": "ناکام: ", "unknown": "نامعلوم خرابی", "connLost": "سرور سے رابطہ منقطع", "buildingPreview": "اسٹوری بورڈ پیش نظارہ بن رہا ہے…", "rendering": "براؤزر میں ویڈیو بن رہی ہے…", "doneToast": "ویڈیو کامیابی سے بن گئی ✓", "serverDoneToast": "ویڈیو سرور پر بن گئی ✓", "settingsSaved": "ترتیبات محفوظ ہو گئیں", "scriptImported": "اسکرپٹ درآمد ہو گئی", "noTitle": "بے نام ویڈیو", "me": "میں", "you": "آپ", "sec": "سیکنڈ", "voiceNone": "آواز نہیں", "voiceFemale": "عورت کی آواز", "voiceMale": "مرد کی آواز"}};
+window.__CREATIVE__={"ar": {"sceneWord": "مشهد", "defaultIdea": "فيديو سينمائي قصير عن فكرة تستحق المشاركة.", "shots": ["لقطة واسعة تأسيسية", "لقطة متوسطة", "لقطة قريبة للتفاصيل", "لقطة من فوق الكتف", "لقطة جوية بالدرون", "دفع بطيء للأمام", "لقطة تتبّع", "لقطة بطولية ثابتة"], "beats": ["نفتتح على", "الفكرة الجوهرية وراء", "لماذا تهمّ: المشكلة التي تحلّها", "كيف تعمل، خطوة بخطوة", "نظرة أقرب على التفاصيل", "الأثر الواقعي ومن يستفيد", "ما الذي يأتي بعد ذلك", "خاطرة ختامية تستحق التذكّر"], "styles": {"cinematic": "سينمائي، عمق ميدان ضحل، حبيبات فيلم، توهج عدسي", "documentary": "وثائقي، إضاءة طبيعية، واقعية محمولة باليد", "corporate": "مؤسسي نظيف، بسيط، إضاءة استوديو ناعمة", "anime": "أنمي، ألوان زاهية، تكوين ديناميكي", "retro": "ريترو ثمانينات، نيون، حبيبات VHS", "minimal": "بسيط، تصميم مسطّح، مساحات سلبية واسعة"}, "mood": "جاذب، واضح، احترافي", "musicLine": "خلفية سينمائية هادئة", "pacing": "{n} مشاهد خلال ~{s} ثانية", "suggestions": [["فيديو سينمائي عن الطاقة الشمسية", "مشاهد صحراوية، ألوان ذهبية، إيقاع هادئ"], ["إعلان منتج تقني بأسلوب نيون", "مستقبلي، بنفسجي، إيقاع سريع"], ["شرح تعليمي عن دورة الماء", "وثائقي، أزرق محيطي، 8 مشاهد"], ["قصة قصيرة عن رحلة في الغابة", "أخضر هادئ، لقطات جوية، موسيقى دافئة"]], "stop": ["عن", "فيديو", "اصنع"]}, "en": {"sceneWord": "Scene", "defaultIdea": "A short cinematic video about an idea worth sharing.", "shots": ["wide establishing shot", "medium shot", "close-up detail shot", "over-the-shoulder shot", "aerial drone shot", "slow push-in", "tracking shot", "heroic static shot"], "beats": ["We open on", "This is the core idea behind", "Why it matters: the problem it solves", "How it works, step by step", "A closer look at the details that matter", "The real-world impact and who benefits", "What comes next in", "A closing thought worth remembering"], "styles": {"cinematic": "cinematic, shallow depth of field, film grain, lens flare", "documentary": "documentary, natural light, handheld realism", "corporate": "clean corporate, minimal, soft studio light", "anime": "anime, vivid colors, dynamic composition", "retro": "80s retro, neon, VHS grain", "minimal": "minimal, flat design, wide negative space"}, "mood": "engaging, clear, professional", "musicLine": "calm cinematic background", "pacing": "{n} scenes over ~{s} seconds", "suggestions": [["Cinematic video about solar energy", "desert scenes, golden tones, calm pace"], ["Neon-style tech product ad", "futuristic, purple, fast cuts"], ["Educational explainer on the water cycle", "documentary, ocean blue, 8 scenes"], ["A short story about a forest journey", "calm green, aerial shots, warm music"]], "stop": ["make", "create", "video", "about"]}, "fr": {"sceneWord": "Scène", "defaultIdea": "Une courte vidéo cinématique sur une idée qui mérite d'être partagée.", "shots": ["plan large d'ouverture", "plan moyen", "gros plan sur les détails", "plan par-dessus l'épaule", "plan aérien de drone", "travelling avant lent", "plan de suivi", "plan héroïque fixe"], "beats": ["Nous ouvrons sur", "Voici l'idée centrale derrière", "Pourquoi c'est important : le problème résolu", "Comment ça marche, étape par étape", "Un regard plus proche sur les détails qui comptent", "L'impact réel et les bénéficiaires", "Ce qui vient ensuite dans", "Une pensée finale qui mérite d'être retenue"], "styles": {"cinematic": "cinématique, faible profondeur de champ, grain de film", "documentary": "documentaire, lumière naturelle, réalisme caméra à l'épaule", "corporate": "corporate épuré, minimaliste, lumière studio douce", "anime": "anime, couleurs vives, composition dynamique", "retro": "rétro 80s, néon, grain VHS", "minimal": "minimaliste, design plat, larges espaces négatifs"}, "mood": "captivant, clair, professionnel", "musicLine": "fond cinématique calme", "pacing": "{n} scènes en ~{s} secondes", "suggestions": [["Vidéo cinématique sur l'énergie solaire", "scènes de désert, tons dorés, rythme calme"], ["Pub produit tech style néon", "futuriste, violet, coupes rapides"], ["Explication pédagogique du cycle de l'eau", "documentaire, bleu océan, 8 scènes"], ["Une histoire courte sur un voyage en forêt", "vert apaisant, vues aériennes, musique chaleureuse"]], "stop": ["créer", "faire", "vidéo", "sur"]}, "es": {"sceneWord": "Escena", "defaultIdea": "Un vídeo cinematográfico corto sobre una idea que merece compartirse.", "shots": ["plano general de apertura", "plano medio", "primer plano de detalles", "plano sobre el hombro", "plano aéreo de dron", "travelling lento hacia delante", "plano de seguimiento", "plano heroico fijo"], "beats": ["Abrimos con", "Esta es la idea central detrás de", "Por qué importa: el problema que resuelve", "Cómo funciona, paso a paso", "Una mirada más cercana a los detalles que importan", "El impacto real y quién se beneficia", "Lo que viene después en", "Un pensamiento final que vale recordar"], "styles": {"cinematic": "cinematográfico, poca profundidad de campo, grano fílmico", "documentary": "documental, luz natural, realismo en mano", "corporate": "corporativo limpio, minimalista, luz suave de estudio", "anime": "anime, colores vivos, composición dinámica", "retro": "retro ochentero, neón, grano VHS", "minimal": "minimalista, diseño plano, amplio espacio negativo"}, "mood": "atractivo, claro, profesional", "musicLine": "fondo cinematográfico tranquilo", "pacing": "{n} escenas en ~{s} segundos", "suggestions": [["Vídeo cinematográfico sobre energía solar", "escenas de desierto, tonos dorados, ritmo tranquilo"], ["Anuncio de producto tech estilo neón", "futurista, morado, cortes rápidos"], ["Explicación educativa del ciclo del agua", "documental, azul océano, 8 escenas"], ["Una historia corta sobre un viaje al bosque", "verde tranquilo, tomas aéreas, música cálida"]], "stop": ["crear", "hacer", "vídeo", "sobre"]}, "de": {"sceneWord": "Szene", "defaultIdea": "Ein kurzes filmisches Video über eine Idee, die es wert ist geteilt zu werden.", "shots": ["weiter einführender Totale", "mittlere Einstellung", "Nahaufnahme der Details", "Über-Schulter-Einstellung", "Luftaufnahme mit Drohne", "langsamer Heranzoom", "Verfolgereinstellung", "heroische statische Einstellung"], "beats": ["Wir öffnen mit", "Das ist die Kernidee hinter", "Warum es wichtig ist: das gelöste Problem", "Wie es funktioniert, Schritt für Schritt", "Ein näherer Blick auf die entscheidenden Details", "Die reale Wirkung und wer profitiert", "Was als Nächstes kommt in", "Ein Schlussgedanke, den man sich merken sollte"], "styles": {"cinematic": "filmisch, geringe Schärfentiefe, Filmkorn", "documentary": "dokumentarisch, natürliches Licht, Handkamera-Realismus", "corporate": "klares Corporate, minimalistisch, weiches Studiolicht", "anime": "Anime, leuchtende Farben, dynamische Komposition", "retro": "80er-Retro, Neon, VHS-Korn", "minimal": "minimalistisch, flaches Design, viel Negativraum"}, "mood": "packend, klar, professionell", "musicLine": "ruhige filmische Hintergrundmusik", "pacing": "{n} Szenen in ~{s} Sekunden", "suggestions": [["Filmisches Video über Solarenergie", "Wüstenszenen, goldene Töne, ruhiges Tempo"], ["Tech-Produktwerbung im Neon-Stil", "futuristisch, violett, schnelle Schnitte"], ["Erklärvideo zum Wasserkreislauf", "dokumentarisch, Ozeanblau, 8 Szenen"], ["Eine kurze Geschichte über eine Waldreise", "ruhiges Grün, Luftaufnahmen, warme Musik"]], "stop": ["erstellen", "machen", "video", "über"]}, "pt": {"sceneWord": "Cena", "defaultIdea": "Um vídeo cinematográfico curto sobre uma ideia que merece ser compartilhada.", "shots": ["plano geral de abertura", "plano médio", "close-up de detalhes", "plano por cima do ombro", "plano aéreo de drone", "avanço lento de câmera", "plano de seguimento", "plano heróico estático"], "beats": ["Abrimos com", "Esta é a ideia central por trás de", "Por que importa: o problema que resolve", "Como funciona, passo a passo", "Uma olhada mais de perto nos detalhes que importam", "O impacto real e quem se beneficia", "O que vem a seguir em", "Um pensamento final que vale lembrar"], "styles": {"cinematic": "cinematográfico, pouca profundidade de campo, granulação de filme", "documentary": "documentário, luz natural, realismo de câmera na mão", "corporate": "corporativo limpo, minimalista, luz suave de estúdio", "anime": "anime, cores vivas, composição dinâmica", "retro": "retro anos 80, neon, granulação VHS", "minimal": "minimalista, design plano, amplo espaço negativo"}, "mood": "envolvente, claro, profissional", "musicLine": "trilha cinematográfica calma", "pacing": "{n} cenas em ~{s} segundos", "suggestions": [["Vídeo cinematográfico sobre energia solar", "cenas de deserto, tons dourados, ritmo calmo"], ["Anúncio de produto tech estilo neon", "futurista, roxo, cortes rápidos"], ["Explicação educativa do ciclo da água", "documentário, azul oceano, 8 cenas"], ["Uma história curta sobre uma viagem à floresta", "verde calmo, imagens aéreas, música calorosa"]], "stop": ["criar", "fazer", "vídeo", "sobre"]}, "tr": {"sceneWord": "Sahne", "defaultIdea": "Paylaşılmayı hak eden bir fikir hakkında kısa sinematik bir video.", "shots": ["geniş açılı açılış planı", "orta plan", "yakın detay planı", "omuz üstü plan", "drone havadan çekim", "yavaş yaklaşma", "takip planı", "kahramanlık sabit planı"], "beats": ["Şöyle açılıyor:", "Bunun arkasındaki temel fikir bu:", "Neden önemli: çözdüğü problem", "Nasıl çalışıyor, adım adım", "Önemli detaylara daha yakından bakış", "Gerçek dünya etkisi ve kimlerin yararlandığı", "Sırada ne var:", "Aklınızda kalması gereken bir kapanış düşüncesi"], "styles": {"cinematic": "sinematik, sığ alan derinliği, film grenli", "documentary": "belgesel, doğal ışık, el kamerası gerçekçiliği", "corporate": "temiz kurumsal, minimal, yumuşak stüdyo ışığı", "anime": "anime, canlı renkler, dinamik kompozisyon", "retro": "80'ler retro, neon, VHS greni", "minimal": "minimal, düz tasarım, geniş negatif alan"}, "mood": "büyüleyici, net, profesyonel", "musicLine": "sakin sinematik fon müziği", "pacing": "~{s} saniyede {n} sahne", "suggestions": [["Güneş enerjisi hakkında sinematik video", "çöl sahneleri, altın tonlar, sakin tempo"], ["Neon tarzı teknoloji ürünü reklam", "fütüristik, mor, hızlı kesmeler"], ["Su döngüsü hakkında eğitici anlatım", "belgesel, okyanus mavisi, 8 sahne"], ["Orman yolculuğu hakkında kısa bir hikaye", "sakin yeşil, havadan çekimler, sıcak müzik"]], "stop": ["yap", "oluştur", "video", "hakkında"]}, "ru": {"sceneWord": "Сцена", "defaultIdea": "Короткое кинематографичное видео об идее, которой стоит поделиться.", "shots": ["общий установочный план", "средний план", "крупный план деталей", "план через плечо", "воздушный план с дрона", "медленный наезд", "движущийся план", "героический статичный план"], "beats": ["Мы начинаем с", "В этом суть идеи:", "Почему это важно: какую проблему решает", "Как это работает, шаг за шагом", "Ближе к деталям, которые имеют значение", "Реальный эффект и те, кто выигрывает", "Что дальше в", "Заключительная мысль, которую стоит запомнить"], "styles": {"cinematic": "кинематографично, малая глубина резкости, плёночное зерно", "documentary": "документально, естественный свет, реализм ручной камеры", "corporate": "чистый корпоративный стиль, минимализм, мягкий студийный свет", "anime": "аниме, яркие цвета, динамичная композиция", "retro": "ретро 80-х, неон, зернистость VHS", "minimal": "минимализм, плоский дизайн, много негативного пространства"}, "mood": "увлекательно, ясно, профессионально", "musicLine": "спокойная кинематографичная фонограмма", "pacing": "{n} сцен за ~{s} секунд", "suggestions": [["Кинематографичное видео о солнечной энергии", "сцены пустыни, золотые тона, спокойный темп"], ["Реклама технопродукта в стиле неон", "футуристично, фиолетовый, быстрые склейки"], ["Обучающее видео о круговороте воды", "документально, океанический синий, 8 сцен"], ["Короткая история о путешествии по лесу", "спокойный зелёный, съёмка с воздуха, тёплая музыка"]], "stop": ["сделать", "создать", "видео", "о"]}, "zh": {"sceneWord": "场景", "defaultIdea": "一部关于值得分享的想法的简短电影感视频。", "shots": ["全景定场镜头", "中景", "细节特写", "过肩镜头", "航拍镜头", "缓慢推近", "跟拍镜头", "英雄式固定镜头"], "beats": ["我们开场于", "这就是背后的核心想法", "为什么重要：它解决了什么问题", "它是如何工作的，一步步来看", "仔细看看真正重要的细节", "现实影响以及谁受益", "接下来是什么", "一个值得记住的收尾思考"], "styles": {"cinematic": "电影感，浅景深，胶片颗粒", "documentary": "纪录片风格，自然光，手持写实", "corporate": "简洁企业风，极简，柔和棚光", "anime": "动漫，鲜艳色彩，动感构图", "retro": "80年代复古，霓虹，VHS颗粒", "minimal": "极简，扁平设计，大量留白"}, "mood": "吸引人，清晰，专业", "musicLine": "平静的电影感背景音乐", "pacing": "约 {s} 秒内 {n} 个场景", "suggestions": [["关于太阳能的电影感视频", "沙漠场景，金色色调，平静节奏"], ["霓虹风格科技产品广告", "未来感，紫色，快速剪辑"], ["水循环科普讲解视频", "纪录片风格，海洋蓝，8个场景"], ["一段森林之旅的短故事", "平静的绿色，航拍镜头，温暖音乐"]], "stop": ["制作", "创建", "视频", "关于"]}, "ja": {"sceneWord": "シーン", "defaultIdea": "共有する価値のあるアイデアについての短いシネマティック映像。", "shots": ["ワイドなオープニングショット", "ミディアムショット", "ディテールのクローズアップ", "オーバーザショルダー", "ドローン空撮", "ゆっくりとしたプッシュイン", "トラッキングショット", "ヒロイックな固定ショット"], "beats": ["オープニングは", "これがその背後にある核心のアイデアです", "なぜ重要か：解決する問題", "仕組みをひとつずつ解説", "重要なディテールをより詳しく", "現実の影響と恩恵を受ける人", "次に来るのは", "心に残る結びの一言"], "styles": {"cinematic": "シネマティック、浅い被写界深度、フィルムグレイン", "documentary": "ドキュメンタリー、自然光、ハンドヘルドリアリズム", "corporate": "クリーンなコーポレート、ミニマル、柔らかいスタジオライト", "anime": "アニメ、鮮やかな色彩、ダイナミックな構図", "retro": "80sレトロ、ネオン、VHSグレイン", "minimal": "ミニマル、フラットデザイン、余白を広く"}, "mood": "魅力的、明快、プロフェッショナル", "musicLine": "落ち着いたシネマティックBGM", "pacing": "約{s}秒で{n}シーン", "suggestions": [["太陽光発電についてのシネマティック映像", "砂漠のシーン、金色のトーン、穏やかなテンポ"], ["ネオン風テック製品広告", "未来的、紫、速いカット"], ["水循環の解説動画", "ドキュメンタリー、オーシャンブルー、8シーン"], ["森の旅についての短い物語", "穏やかな緑、空撮、温かい音楽"]], "stop": ["作る", "作成", "動画", "について"]}, "hi": {"sceneWord": "सीन", "defaultIdea": "साझा करने लायक विचार पर एक छोटा सिनेमैटिक वीडियो।", "shots": ["वाइड ओपनिंग शॉट", "मीडियम शॉट", "डिटेल क्लोज़-अप", "ओवर-द-शोल्डर शॉट", "ड्रोन एरियल शॉट", "धीमा पुश-इन", "ट्रैकिंग शॉट", "हीरो स्टैटिक शॉट"], "beats": ["शुरुआत करते हैं", "यही इसके पीछे का मुख्य विचार है", "यह क्यों मायने रखता है: यह कौन सी समस्या सुलाता है", "यह कैसे काम करता है, एक-एक चरण", "ज़रूरी बातों पर गहरी नज़र", "असल दुनिया में असर और लाभ", "आगे क्या आता है:", "एक याद रहने वाली समाप्ति"], "styles": {"cinematic": "सिनेमैटिक, शैलो डेप्थ ऑफ़ फील्ड, फिल्म ग्रेन", "documentary": "डॉक्यूमेंट्री, प्राकृतिक रोशनी, हैंडहेल्ड रियलिज़्म", "corporate": "साफ़ कॉर्पोरेट, मिनिमल, सॉफ्ट स्टूडियो लाइट", "anime": "एनीमे, चमकीले रंग, डायनामिक कंपोज़िशन", "retro": "80s रेट्रो, नियॉन, VHS ग्रेन", "minimal": "मिनिमल, फ्लैट डिज़ाइन, खुली जगह"}, "mood": "आकर्षक, साफ़, प्रोफेशनल", "musicLine": "शांत सिनेमैटिक बैकग्राउंड", "pacing": "~{s} सेकंड में {n} सीन", "suggestions": [["सोलर एनर्जी पर सिनेमैटिक वीडियो", "रेगिस्तान के दृश्य, सुनहरे रंग, शांत गति"], ["नियॉन स्टाइल टेक प्रोडक्ट विज्ञापन", "फ्यूचरिस्टिक, बैंगनी, तेज़ कट"], ["जल चक्र की शैक्षिक व्याख्या", "डॉक्यूमेंट्री, ओशन ब्लू, 8 सीन"], ["जंगल की यात्रा की छोटी कहानी", "शांत हरित, एरियल शॉट, गर्म संगीत"]], "stop": ["बनाओ", "बनाएँ", "वीडियो", "पर"]}, "id": {"sceneWord": "Adegan", "defaultIdea": "Video sinematik singkat tentang ide yang layak dibagikan.", "shots": ["wide shot pembuka", "shot medium", "close-up detail", "shot over-the-shoulder", "shot udara drone", "push-in lambat", "shot tracking", "shot statis heroik"], "beats": ["Kita buka dengan", "Inilah ide inti di balik", "Kenapa penting: masalah yang diselesaikan", "Cara kerjanya, langkah demi langkah", "Melihat lebih dekat detail yang penting", "Dampak nyata dan siapa yang diuntungkan", "Apa selanjutnya dari", "Pikiran penutup yang layak diingat"], "styles": {"cinematic": "sinematik, depth of field dangkal, grain film", "documentary": "dokumenter, cahaya alami, realisme handheld", "corporate": "korporat bersih, minimalis, cahaya studio lembut", "anime": "anime, warna cerah, komposisi dinamis", "retro": "retro 80-an, neon, grain VHS", "minimal": "minimalis, desain flat, ruang negatif luas"}, "mood": "menarik, jelas, profesional", "musicLine": "latar sinematik yang tenang", "pacing": "{n} adegan dalam ~{s} detik", "suggestions": [["Video sinematik tentang energi matahari", "adegan gurun, nuansa emas, tempo tenang"], ["Iklan produk tech gaya neon", "futuristik, ungu, potongan cepat"], ["Penjelasan edukatif siklus air", "dokumenter, biru laut, 8 adegan"], ["Cerita pendek tentang perjalanan di hutan", "hijau tenang, cuplikan udara, musik hangat"]], "stop": ["buat", "video", "tentang"]}, "fa": {"sceneWord": "صحنه", "defaultIdea": "یک ویدیوی سینمایی کوتاه درباره ایده‌ای که ارزش باز شدن دارد.", "shots": ["نمای باز آغازین", "نمای میانه", " نمای نزدیک جزئیات", "نمای بالای شانه", "نمای هوایی با پهپاد", "حرکت آرام به جلو", "نمای تعقیب", "نمای قهرمانانه ثابت"], "beats": ["با این شروع می‌کنیم:", "ایده اصلی پشت این است:", "چرا مهم است: چه مشکلی را حل می‌کند", "چطور کار می‌کند، قدم به قدم", "نگاهی نزدیک‌تر به جزئیات مهم", "اثر واقعی و سودمندان", "بعدش چه می‌شود در", "فکر پایانی‌ای که ارزش به یاد ماندن دارد"], "styles": {"cinematic": "سینمایی، عمق میدان کم، گِرِین فیلم", "documentary": "مستند، نور طبیعی، رئالیسم دوربین دستی", "corporate": "سازمانی تمیز، مینیمال، نور استودیو نرم", "anime": "انیمه، رنگ‌های زنده، ترکیب‌بندی پویا", "retro": "رترو دهه ۸۰، نئون، گرین VHS", "minimal": "مینیمال، طراحی فلت، فضای منفی زیاد"}, "mood": "جذاب، روشن، حرفه‌ای", "musicLine": "پس‌زمینه سینمایی آرام", "pacing": "{n} صحنه در ~{s} ثانیه", "suggestions": [["ویدیوی سینمایی درباره انرژی خورشیدی", "صحنه‌های بیابان، طلایى، ریتم آرام"], ["تبلیغ محصول تکنولوژی به سبک نئون", "آینده‌نگر، بنفش، برش سریع"], ["توضیح آموزشی چرخه آب", "مستند، آبی اقیانوسی، ۸ صحنه"], ["داستان کوتاه درباره سفری در جنگل", "سبز آرام، نمای هوایی، موسیقی گرم"]], "stop": ["بساز", "ویدیو", "درباره"]}, "ur": {"sceneWord": "منظر", "defaultIdea": "ایسے خیال پر ایک مختصر سینمائٹک ویڈیو جو شیئر کرنے کے قابل ہو۔", "shots": ["وائڈ اوپننگ شاٹ", "میڈیم شاٹ", "تفصیلی کلوز اپ", "شولڈر کے اوپر شاٹ", "ڈرون ایئریل شاٹ", "آہستہ پش اِن", "ٹریکنگ شاٹ", "ہیروک فکسڈ شاٹ"], "beats": ["ہم شروع کرتے ہیں:", "اس کے پیچھے بنیادی خیال یہ ہے:", "یہ اہم کیوں ہے: یہ کیا مسئلہ حل کرتا ہے", "یہ کیسے کام کرتا ہے، قدم بہ قدم", "اہم تفصیلات پر قریب سے نظر", "اصل دنیا میں اثر اور فائدہ اٹھانے والے", "آگے کیا آئے گا:", "ایک اختتامی خیال جو یاد رہنے کے قابل ہو"], "styles": {"cinematic": "سینمائٹک، کم فیلڈ ڈیپتھ، فلم گرین", "documentary": "دستاویزی، قدرتی روشنی، ہینڈہیلڈ حقیقت پسندی", "corporate": "صاف کارپوریٹ، کم از کم، نرم اسٹوڈیو لائٹ", "anime": "انیمے، شاندار رنگ، متحرک ترتیب", "retro": "اٹھیس رٹرو، نیون، VHS گرین", "minimal": "کم از کم، فلیٹ ڈیزائن، کھلی جگہ"}, "mood": "دلکش، واضح، پیشہ ور", "musicLine": "پرسکون سینمائٹک پس منظر", "pacing": "~{s} سیکنڈ میں {n} مناظر", "suggestions": [["سولر انرجی پر سینمائٹک ویڈیو", "صحرائی مناظر، سنہرے رنگ، پرسکون رفتار"], ["نیون اسٹائل ٹیک پروڈکٹ اشتہار", "مستقبلی، بنفشی، تیز کٹس"], ["پانی کے چکر کی تعلیمی وضاحت", "دستاویزی، سمندری نیلا، 8 مناظر"], ["جنگل کے سفر کی مختصر کہانی", "پرسکون سبز، فضائی شاٹس، گرم موسیقی"]], "stop": ["بنائیں", "ویڈیو", "پر"]}};</script>
+<script id="app">
+
+/* =========================================================================
+   AI Video Agent — Grok-style UI
+   Two engines:
+     • local  : 100% free, runs in the browser (canvas + MediaRecorder + WebAudio)
+     • server : FastAPI + FFmpeg pipeline (multi-user, long-form, edge-tts)
+   ========================================================================= */
+(function(){
+"use strict";
+
+/* ----------------------------- helpers ----------------------------- */
+const $ = (s, r) => (r||document).querySelector(s);
+const $$ = (s, r) => Array.from((r||document).querySelectorAll(s));
+const uid = () => Math.random().toString(36).slice(2,10);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const fmt = (s) => { s = Math.max(0, Math.round(s)); const m = Math.floor(s/60); return String(m).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); };
+const esc = (s) => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'), 2600); }
+
+/* ----------------------------- state ----------------------------- */
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem('av_'+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('av_'+k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem('av_'+k); }catch(e){} }
+};
+
+
+/* =========================================================================
+   I18N ENGINE (EASY CODE — works in every language)
+   ========================================================================= */
+const LANGS = window.__LANGS__;
+const I18ND = window.__I18N__;
+const CRD = window.__CREATIVE__;
+function detectLang(){ try{ const n = (navigator.language||'en').slice(0,2).toLowerCase(); return LANGS.some(l => l[0]===n) ? n : 'en'; }catch(e){ return 'en'; } }
+function T(k){ const d = I18ND[state.lang]; return (d && d[k]) || I18ND.en[k] || k; }
+function CR(){ return CRD[state.lang] || CRD.en; }
+function isRTL(){ return state.lang==='ar' || state.lang==='fa' || state.lang==='ur'; }
+const VOICES = {
+  ar:[['ar-EG-SalmaNeural','Salma'],['ar-EG-ShakirNeural','Shakir']],
+  en:[['en-US-AriaNeural','Aria'],['en-US-GuyNeural','Guy']],
+  fr:[['fr-FR-DeniseNeural','Denise'],['fr-FR-HenriNeural','Henri']],
+  es:[['es-ES-ElviraNeural','Elvira'],['es-ES-AlvaroNeural','Alvaro']],
+  de:[['de-DE-KatjaNeural','Katja'],['de-DE-ConradNeural','Conrad']],
+  pt:[['pt-BR-FranciscaNeural','Francisca'],['pt-BR-AntonioNeural','Antonio']],
+  tr:[['tr-TR-EmelNeural','Emel'],['tr-TR-AhmetNeural','Ahmet']],
+  ru:[['ru-RU-SvetlanaNeural','Svetlana'],['ru-RU-DmitryNeural','Dmitry']],
+  zh:[['zh-CN-XiaoxiaoNeural','Xiaoxiao'],['zh-CN-YunxiNeural','Yunxi']],
+  ja:[['ja-JP-NanamiNeural','Nanami'],['ja-JP-KeitaNeural','Keita']],
+  hi:[['hi-IN-SwaraNeural','Swara'],['hi-IN-MadhurNeural','Madhur']],
+  id:[['id-ID-GadisNeural','Gadis'],['id-ID-ArdiNeural','Ardi']],
+  fa:[['fa-IR-DilaraNeural','Dilara'],['fa-IR-FaridNeural','Farid']],
+  ur:[['ur-PK-UzmaNeural','Uzma'],['ur-PK-AsadNeural','Asad']]
+};
+const MUSIC_LABELS = {
+  ar:{calm:'هادئة',uplifting:'متفائلة',tense:'متوترة',epic:'ملحمية',warm:'دافئة'},
+  en:{calm:'Calm',uplifting:'Uplifting',tense:'Tense',epic:'Epic',warm:'Warm'},
+  fr:{calm:'Calmante',uplifting:'Enjouée',tense:'Tendue',epic:'Épique',warm:'Chaleureuse'},
+  es:{calm:'Tranquila',uplifting:'Optimista',tense:'Tensa',epic:'Épica',warm:'Cálida'},
+  de:{calm:'Ruhig',uplifting:'Optimistisch',tense:'Spannend',epic:'Episch',warm:'Warm'},
+  pt:{calm:'Calma',uplifting:'Otimista',tense:'Tensa',epic:'Épica',warm:'Aconchegante'},
+  tr:{calm:'Sakin',uplifting:'Müjdeli',tense:'Gergin',epic:'Epik',warm:'Sıcak'},
+  ru:{calm:'Спокойная',uplifting:'Бодрая',tense:'Напряжённая',epic:'Эпичная',warm:'Тёплая'},
+  zh:{calm:'平静',uplifting:'振奋',tense:'紧张',epic:'史诗',warm:'温暖'},
+  ja:{calm:'穏やか',uplifting:'爽やか',tense:'緊張',epic:'壮大',warm:'温かい'},
+  hi:{calm:'शांत',uplifting:'उत्साही',tense:'तनावपूर्ण',epic:'महाकाव्य',warm:'गर्म'},
+  id:{calm:'Tenang',uplifting:'Membangun',tense:'Menegangkan',epic:'Epik',warm:'Hangat'},
+  fa:{calm:'آرام',uplifting:'امیدبخش',tense:'پرتنش',epic:'حماسی',warm:'گرم'},
+  ur:{calm:'پرسکون',uplifting:'خوشامیدی',tense:'مشتعل',epic:'رزمیہ',warm:'گرم'}
+};
+function buildVoiceSelect(){
+  const sel = $('#setVoice'); const vs = VOICES[state.lang] || VOICES.en; const cur = state.settings.voice;
+  sel.innerHTML = vs.map((v,i) => '<option value="'+v[0]+'">'+v[1]+' — '+(i===0?T('voiceFemale'):T('voiceMale'))+'</option>').join('')
+    + '<option value="none">'+T('voiceNone')+'</option>';
+  sel.value = Array.prototype.some.call(sel.options, o => o.value === cur) ? cur : vs[0][0];
+  state.settings.voice = sel.value;
+}
+function buildMusicSelect(){
+  const sel = $('#setMusic'); const cur = state.settings.music; const ml = MUSIC_LABELS[state.lang] || MUSIC_LABELS.en;
+  const noneLabel = I18ND[state.lang] ? (I18ND[state.lang].voiceNone) : 'None';
+  sel.innerHTML = ['calm','uplifting','tense','epic','warm'].map(m => '<option value="'+m+'">'+ml[m]+'</option>').join('')
+    + '<option value="none">'+noneLabel+'</option>';
+  sel.value = Array.prototype.some.call(sel.options, o => o.value === cur) ? cur : 'calm';
+  state.settings.music = sel.value;
+}
+function applyLang(){
+  document.documentElement.lang = state.lang;
+  document.documentElement.dir = isRTL() ? 'rtl' : 'ltr';
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('tBanner', T('banner'));
+  set('tNewChat', T('newChat'));
+  set('tConvs', T('convs'));
+  set('tSettings', T('settings'));
+  set('tEmptyTitle', T('emptyTitle'));
+  set('tEmptySub', T('emptySub'));
+  set('tHint', T('hint'));
+  set('tSettingsTitle', T('settingsTitle'));
+  set('tSettingsSub', T('settingsSub'));
+  set('tLabelSeconds', T('secondsLabel'));
+  set('tLabelRes', T('resLabel'));
+  set('tLabelFps', T('fpsLabel'));
+  set('tLabelVoice', T('voiceLabel'));
+  set('tLabelMusic', T('musicLabel'));
+  set('tLabelLlm', T('llmLabel'));
+  set('tNote', T('note'));
+  set('tClose', T('close'));
+  set('tSave', T('save'));
+  set('tTabLogin', T('login'));
+  set('tTabSignup', T('signup'));
+  set('tLabelName', T('nameLabel'));
+  set('tLabelEmail', T('emailLabel'));
+  set('tLabelPass', T('passLabel'));
+  set('tLabelServer', T('serverLabel'));
+  set('tClose2', T('close'));
+  set('acctNote', T('noLoginNote'));
+  set('acctLabel', state.user ? state.user.name : T('account'));
+  const inp = $('#input'); if (inp) inp.placeholder = T('inputPlaceholder');
+  const ab = $('#attachBtn'); if (ab) ab.title = T('attachTitle');
+  buildVoiceSelect(); buildMusicSelect();
+  const ls = $('#langSel');
+  if (ls){
+    ls.innerHTML = LANGS.map(l => '<option value="'+l[0]+'">'+l[2]+' '+l[1]+'</option>').join('');
+    ls.value = state.lang;
+    ls.onchange = (e) => { state.lang = e.target.value; LS.set('lang', state.lang); applyLang(); };
+  }
+  updateModeUI();
+  renderSuggestions();
+}
+
+const state = {
+  conversations: LS.get('convs', []),
+  activeId: LS.get('active', null),
+  settings: Object.assign({
+    seconds: 60, res: '1920x1080', fps: 30,
+    voice: 'en-US-AriaNeural', music: 'calm', useLlm: false
+  }, LS.get('settings', {})),
+  mode: LS.get('mode', 'local'),      // 'local' | 'server'
+  lang: LS.get('lang', detectLang()), // auto-detect on first run
+  serverUrl: LS.get('serverUrl', ''),
+  token: LS.get('token', ''),
+  user: LS.get('user', null),
+  busy: false
+};
+
+function saveConvs(){ LS.set('convs', state.conversations); LS.set('active', state.activeId); }
+function activeConv(){ return state.conversations.find(c => c.id === state.activeId) || null; }
+
+/* =========================================================================
+   PROMPT OPTIMIZER (free, deterministic — JS port of the Python heuristic)
+   ========================================================================= */
+const PALETTES = {
+  cinematic_teal:['#0b1e2d','#123b4f','#1f6f8b','#e8b04b','#f4f1ea'],
+  sunset_warm:['#2b1055','#7597de','#ff7b54','#ffb26b','#ffe3c4'],
+  forest_calm:['#0f2417','#1e4d2b','#3f8f5b','#a8d5a2','#f0f7ee'],
+  mono_noir:['#0a0a0a','#2b2b2b','#5c5c5c','#b8b8b8','#f5f5f5'],
+  vibrant_pop:['#1a1a2e','#e94560','#f9a826','#4ecdc4','#f7f7f7'],
+  ocean_deep:['#02111b','#0a3d62','#1e90ff','#7fd8ff','#eaf6ff'],
+  royal_purple:['#1b0b2e','#3d1e6d','#7b2ff7','#c77dff','#f3e8ff'],
+  desert_gold:['#2d1b0e','#7a4a1d','#c98a3a','#e8c07d','#fdf6e3']
+};
+const STYLE_KEYS = ['cinematic','documentary','corporate','anime','retro','minimal'];
+function stylePresets(){ const s = CR().styles; return {cinematic:s.cinematic, documentary:s.documentary, corporate:s.corporate, anime:s.anime, retro:s.retro, minimal:s.minimal}; }
+function shotCycle(){ return CR().shots; }
+const TRANSITIONS = ['fade','slideleft','wipeleft','circleopen','dissolve','smoothleft'];
+
+function pickPalette(text){
+  const t = text.toLowerCase();
+  const rules = [
+    [['ocean','sea','water','beach','wave','بحر','ماء','شاطئ'],'ocean_deep'],
+    [['forest','nature','tree','green','eco','plant','غابة','طبيعة','أخضر','بيئة'],'forest_calm'],
+    [['sunset','sunrise','warm','desert','gold','غروب','شروق','دافئ','صحراء','ذهب'],'sunset_warm'],
+    [['noir','dark','mystery','thriller','black','غامض','مظلم','أسود'],'mono_noir'],
+    [['neon','cyber','future','tech','ai','robot','نيون','مستقبل','تقنية','روبوت'],'royal_purple'],
+    [['fun','party','pop','colorful','kids','مرح','حفلة','ملون','أطفال'],'vibrant_pop'],
+    [['desert','sand','dune','egypt','pyramid','رمال','كثبان','مصر','هرم'],'desert_gold']
+  ];
+  for (const [keys,name] of rules) if (keys.some(k => t.includes(k))) return [name, PALETTES[name]];
+  return ['cinematic_teal', PALETTES.cinematic_teal];
+}
+function pickStyle(text){
+  const t = text.toLowerCase();
+  const SP = stylePresets();
+  for (const k of STYLE_KEYS) if (t.includes(k)) return SP[k];
+  if (['business','product','startup','company','pitch','شركة','منتج','مشروع'].some(k=>t.includes(k))) return SP.corporate;
+  if (['story','journey','adventure','history','قصة','رحلة','تاريخ'].some(k=>t.includes(k))) return SP.documentary;
+  return SP.cinematic;
+}
+function sentences(text){
+  return text.trim().split(/(?<=[.!?؟])\s+|\n+/).map(s=>s.trim()).filter(Boolean);
+}
+function titleFrom(text){
+  const words = (text.match(/[\p{L}\p{N}']+/gu) || []);
+  if (!words.length) return T('noTitle');
+  const stop = new Set(['a','an','the','of','to','and','for','in','on','with','about','make','create','video','في','عن','من','إلى','على','و','مع','فيديو','اصنع'].concat(CR().stop));
+  const key = words.filter(w => !stop.has(w.toLowerCase())).slice(0,5);
+  return (key.length?key:words.slice(0,5)).join(' ');
+}
+function optimizeHeuristic(idea, targetSeconds, sceneCount){
+  idea = (idea||'').trim() || CR().defaultIdea;
+  const [pname, palette] = pickPalette(idea);
+  const style = pickStyle(idea);
+  const title = titleFrom(idea);
+  if (!sceneCount) sceneCount = clamp(Math.round(targetSeconds/7), 3, 24);
+  sceneCount = clamp(sceneCount, 1, 40);
+  const perScene = Math.max(3, targetSeconds/sceneCount);
+
+  let lines = sentences(idea);
+  if (lines.length < sceneCount){
+    const beats = [
+      CR().beats[0]+' '+title,
+      CR().beats[1]+' '+title+'.',
+      CR().beats[2]+'.',
+      CR().beats[3]+'.',
+      CR().beats[4]+'.',
+      CR().beats[5]+'.',
+      CR().beats[6]+' '+title+'.',
+      CR().beats[7]+'.'
+    ];
+    let i = 0;
+    while (lines.length < sceneCount){ lines.push(beats[i % beats.length]); i++; }
+  }
+  const scenes = [];
+  for (let i=0;i<sceneCount;i++){
+    const line = lines[i % lines.length];
+    const shot = shotCycle()[i % shotCycle().length];
+    const caption = (line.match(/[\p{L}\p{N}']+/gu)||[]).slice(0,6).join(' ').toUpperCase();
+    scenes.push({
+      index:i+1, heading: CR().sceneWord+' '+(i+1), shot,
+      visual: shot+' — '+line.replace(/[.。]$/,'')+'. '+style+'.',
+      on_screen_text: caption, voiceover: line,
+      duration: Math.round(perScene*100)/100,
+      palette, transition: TRANSITIONS[i % TRANSITIONS.length]
+    });
+  }
+  return {
+    title, logline: idea.length<240?idea:idea.slice(0,237)+'...',
+    style, mood: CR().mood,
+    pacing: CR().pacing.replace('{n}', sceneCount).replace('{s}', Math.round(targetSeconds)),
+    voice: state.settings.voice, music: CR().musicLine,
+    palette, scenes, source:'heuristic'
+  };
+}
+
+/* =========================================================================
+   CANVAS RENDERER (free) — draws a scene at a given local progress
+   ========================================================================= */
+function hexToRgb(h){ h=h.replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); const n=parseInt(h,16); return [n>>16&255,n>>8&255,n&255]; }
+function mix(a,b,t){ const A=hexToRgb(a),B=hexToRgb(b); return 'rgb('+Math.round(A[0]+(B[0]-A[0])*t)+','+Math.round(A[1]+(B[1]-A[1])*t)+','+Math.round(A[2]+(B[2]-A[2])*t)+')'; }
+
+function drawScene(ctx, plan, scene, local, W, H){
+  const pal = (scene.palette && scene.palette.length ? scene.palette : plan.palette) || PALETTES.cinematic_teal;
+  const p = clamp(local, 0, 1);
+  // background gradient
+  const g = ctx.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, pal[0]); g.addColorStop(0.55, pal[1] || pal[0]); g.addColorStop(1, pal[2] || pal[1] || pal[0]);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  // moving radial glow (Ken Burns-ish)
+  const cx = W*(0.3 + 0.4*p), cy = H*(0.35 + 0.2*Math.sin(p*Math.PI));
+  const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W,H)*0.7);
+  rg.addColorStop(0, (pal[3]||'#ffffff')+'55');
+  rg.addColorStop(0.5, (pal[2]||pal[1]||'#000000')+'22');
+  rg.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+
+  // diagonal light streaks
+  ctx.save(); ctx.globalAlpha = 0.06; ctx.strokeStyle = pal[4] || '#ffffff'; ctx.lineWidth = Math.max(2, W*0.004);
+  for (let i=0;i<7;i++){
+    const off = ((i/7) + p*0.15) % 1;
+    ctx.beginPath(); ctx.moveTo(W*off - W*0.2, 0); ctx.lineTo(W*off + W*0.1, H); ctx.stroke();
+  }
+  ctx.restore();
+
+  // vignette
+  const vg = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.25, W/2, H/2, Math.max(W,H)*0.75);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+
+  // scene heading (top)
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = pal[4] || '#ffffff';
+  ctx.font = '600 ' + Math.round(H*0.028) + 'px Inter, sans-serif';
+  ctx.textAlign = isRTL() ? 'right' : 'left'; ctx.direction = isRTL() ? 'rtl' : 'ltr';
+  ctx.fillText(scene.heading || '', isRTL() ? W - W*0.05 : W*0.05, H*0.09);
+  ctx.restore();
+
+  // on-screen caption (center) with fade in/out
+  const fade = Math.min(1, p/0.18) * Math.min(1, (1-p)/0.18);
+  ctx.save();
+  ctx.globalAlpha = clamp(fade, 0, 1);
+  ctx.textAlign = 'center'; ctx.direction = isRTL() ? 'rtl' : 'ltr';
+  const fs = Math.round(H*0.075);
+  ctx.font = '700 ' + fs + 'px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.fillText(scene.on_screen_text || '', W/2 + 3, H*0.52 + 3);
+  ctx.fillStyle = pal[4] || '#ffffff';
+  ctx.fillText(scene.on_screen_text || '', W/2, H*0.52);
+  ctx.restore();
+
+  // progress bar
+  ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(W*0.05, H*0.93, W*0.9, Math.max(3, H*0.006));
+  ctx.fillStyle = pal[3] || '#ffffff'; ctx.fillRect(W*0.05, H*0.93, W*0.9*p, Math.max(3, H*0.006));
+}
+
+function drawAt(ctx, plan, t, W, H){
+  let acc = 0, idx = 0, local = 0;
+  for (let i=0;i<plan.scenes.length;i++){
+    const d = plan.scenes[i].duration;
+    if (t < acc + d){ idx = i; local = (t-acc)/d; break; }
+    acc += d;
+    if (i === plan.scenes.length-1){ idx = i; local = 1; }
+  }
+  drawScene(ctx, plan, plan.scenes[idx], local, W, H);
+}
+
+/* ----------------------------- storyboard ----------------------------- */
+function buildStoryboard(plan, opts){
+  const cols = 4, n = clamp(plan.scenes.length, 4, 12);
+  const tw = 480, th = 270, gap = 18, pad = 40, header = 130, footer = 70, label = 34;
+  const rows = Math.ceil(n/cols);
+  const W = pad*2 + cols*tw + (cols-1)*gap;
+  const H = header + pad + rows*(th+label) + (rows-1)*gap + footer;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#0c1018'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = '#121824'; ctx.fillRect(0,0,W,header);
+  ctx.fillStyle = '#e8b04b'; ctx.fillRect(0,header-4,W,4);
+  ctx.fillStyle = '#f5f5f5'; ctx.font = 'bold 44px Inter, sans-serif'; ctx.textAlign='left'; ctx.direction='ltr';
+  ctx.fillText((plan.title||'Video Storyboard').slice(0,60), pad, 62);
+  ctx.fillStyle = '#96a5be'; ctx.font = '24px Inter, sans-serif';
+  const total = plan.scenes.reduce((a,s)=>a+s.duration,0);
+  ctx.fillText(n+' frames  |  duration '+fmt(total)+'  |  contact sheet preview', pad, 100);
+  for (let i=0;i<n;i++){
+    const r = Math.floor(i/cols), cc = i%cols;
+    const x = pad + cc*(tw+gap), y = header + pad + r*(th+label+gap);
+    const tmp = document.createElement('canvas'); tmp.width = tw; tmp.height = th;
+    drawAt(tmp.getContext('2d'), plan, total*(i+0.5)/n, tw, th);
+    ctx.drawImage(tmp, x, y);
+    ctx.strokeStyle = '#3c4860'; ctx.lineWidth = 2; ctx.strokeRect(x, y, tw, th);
+    ctx.fillStyle = '#c8d2e1'; ctx.font = '22px Inter, sans-serif';
+    ctx.fillText(String(i+1).padStart(2,'0')+'  '+fmt(total*(i+0.5)/n), x+6, y+th+24);
+  }
+  ctx.fillStyle = '#7887a0'; ctx.font = '22px Inter, sans-serif';
+  ctx.fillText('Generated by AI Video Agent  -  free local pipeline', pad, H-footer+40);
+  return c.toDataURL('image/png');
+}
+
+/* ----------------------------- music (WebAudio) ----------------------------- */
+function buildMusic(ac, dest, plan, mood){
+  const master = ac.createGain(); master.gain.value = 0.16; master.connect(dest);
+  const chords = {
+    calm:[[220,277.18,329.63],[196,246.94,293.66],[174.61,220,261.63],[164.81,207.65,246.94]],
+    uplifting:[[261.63,329.63,392],[293.66,369.99,440],[329.63,415.3,493.88],[349.23,440,523.25]],
+    tense:[[220,233.08,329.63],[207.65,220,311.13],[196,207.65,293.66],[185,196,277.18]],
+    epic:[[130.81,196,261.63],[146.83,220,293.66],[164.81,246.94,329.63],[174.61,261.63,349.23]],
+    warm:[[196,246.94,293.66],[220,277.18,329.63],[174.61,220,261.63],[164.81,207.65,246.94]]
+  }[mood] || [[220,277.18,329.63],[196,246.94,293.66],[174.61,220,261.63],[164.81,207.65,246.94]];
+  const total = plan.scenes.reduce((a,s)=>a+s.duration,0);
+  const seg = total / chords.length;
+  const oscs = [];
+  chords.forEach((ch, i) => {
+    ch.forEach(f => {
+      const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+      const g = ac.createGain(); g.gain.value = 0;
+      o.connect(g); g.connect(master);
+      const start = ac.currentTime + i*seg;
+      g.gain.setValueAtTime(0, start);
+      g.gain.linearRampToValueAtTime(0.11, start + seg*0.3);
+      g.gain.linearRampToValueAtTime(0, start + seg);
+      o.start(start); o.stop(start + seg + 0.1);
+      oscs.push(o);
+    });
+  });
+  return { stream: dest.stream, stop(){ oscs.forEach(o => { try{ o.stop(); }catch(e){} }); } };
+}
+
+/* ----------------------------- local video render ----------------------------- */
+function pickMime(){
+  const cands = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4'];
+  for (const m of cands) if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m;
+  return '';
+}
+
+async function renderVideoLocal(plan, opts, onProgress){
+  const [W, H] = opts.res.split('x').map(Number);
+  const FPS = opts.fps;
+  const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const stream = canvas.captureStream(FPS);
+
+  let ac = null, music = null;
+  if (opts.music && opts.music !== 'none'){
+    try {
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      const dest = ac.createMediaStreamDestination();
+      music = buildMusic(ac, dest, plan, opts.music);
+      music.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+    } catch(e){ ac = null; }
+  }
+
+  const mime = pickMime();
+  const recOpts = { videoBitsPerSecond: opts.bitrate || 6000000 };
+  if (mime) recOpts.mimeType = mime;
+  const rec = new MediaRecorder(stream, recOpts);
+  const chunks = [];
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  const stopped = new Promise(res => { rec.onstop = res; });
+  rec.start(250);
+
+  const total = plan.scenes.reduce((a,s)=>a+s.duration,0);
+  const t0 = performance.now();
+  await new Promise(resolve => {
+    function frame(){
+      const t = (performance.now() - t0) / 1000;
+      if (t >= total){ resolve(); return; }
+      drawAt(ctx, plan, t, W, H);
+      onProgress(clamp(t/total, 0, 0.99));
+      requestAnimationFrame(frame);
+    }
+    frame();
+  });
+  rec.stop();
+  await stopped;
+  if (music) music.stop();
+  if (ac) try{ ac.close(); }catch(e){}
+
+  const blob = new Blob(chunks, { type: mime || 'video/webm' });
+  const ext = (mime && mime.indexOf('mp4') >= 0) ? 'mp4' : 'webm';
+  return { blob, ext };
+}
+
+/* =========================================================================
+   SERVER API (optional)
+   ========================================================================= */
+function apiBase(){ return (state.serverUrl || '').replace(/\/+$/,''); }
+async function api(path, opts){
+  opts = opts || {};
+  const headers = Object.assign({ 'Content-Type':'application/json' }, opts.headers || {});
+  if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
+  const res = await fetch(apiBase() + path, Object.assign({}, opts, { headers }));
+  if (!res.ok){
+    let msg = res.status + ' ' + res.statusText;
+    try { const j = await res.json(); if (j.detail) msg = j.detail; } catch(e){}
+    throw new Error(msg);
+  }
+  return res.json();
+}
+
+/* =========================================================================
+   RENDERING THE UI
+   ========================================================================= */
+function suggestions(){ return CR().suggestions.map(s => ({ t:s[0], d:s[1] })); }
+
+function renderSuggestions(){
+  $('#sugg').innerHTML = suggestions().map((s,i) =>
+    '<button data-i="'+i+'"><div class="st">'+esc(s.t)+'</div><div class="sd">'+esc(s.d)+'</div></button>'
+  ).join('');
+  $$('#sugg button').forEach(b => b.onclick = () => {
+    $('#input').value = suggestions()[+b.dataset.i].t;
+    autoGrow(); updateSend(); $('#input').focus();
+  });
+}
+
+function renderSidebar(){
+  const list = $('#convList');
+  if (!state.conversations.length){
+    list.innerHTML = '<div style="padding:14px 12px;font-size:12.5px;color:var(--txt-3)">'+T('noConvs')+'</div>';
+    return;
+  }
+  list.innerHTML = state.conversations.map(c =>
+    '<div class="conv'+(c.id===state.activeId?' active':'')+'" data-id="'+c.id+'">'+
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:0 0 15px;opacity:.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'+
+      '<span class="t">'+esc(c.title)+'</span>'+
+      '<span class="del" data-del="'+c.id+'">×</span>'+
+    '</div>'
+  ).join('');
+  $$('#convList .conv').forEach(el => {
+    el.onclick = (e) => {
+      if (e.target.dataset.del){ deleteConv(e.target.dataset.del); return; }
+      state.activeId = el.dataset.id; saveConvs(); renderSidebar(); renderMessages(); closeSidebar();
+    };
+  });
+}
+
+function renderMessages(){
+  const conv = activeConv();
+  const box = $('#messages');
+  if (!conv || !conv.messages.length){
+    $('#empty').style.display = 'flex';
+    box.innerHTML = '';
+    return;
+  }
+  $('#empty').style.display = 'none';
+  box.innerHTML = conv.messages.map(m => m.role === 'user' ? userMsgHTML(m) : botMsgHTML(m)).join('');
+  // wire media + progress
+  conv.messages.forEach(m => { if (m.role === 'assistant' && m.data) wireBotMessage(m); });
+  scrollBottom();
+}
+
+function userMsgHTML(m){
+  return '<div class="msg user"><div class="av">'+T('me')+'</div><div class="body">'+
+    '<div class="who">'+T('you')+'</div><div class="text">'+esc(m.content)+'</div></div></div>';
+}
+
+function planHTML(plan){
+  const sw = (plan.palette||[]).map(c => '<span class="sw" style="background:'+esc(c)+'"></span>').join('');
+  const scenes = (plan.scenes||[]).map(s =>
+    '<div class="scene"><div class="n">'+s.index+'</div><div class="sc">'+
+      '<div class="sh">'+esc(s.heading)+' — '+esc(s.shot)+'</div>'+
+      '<div class="sv">'+esc(s.visual)+'</div>'+
+      (s.voiceover?'<div class="vo">🎙 '+esc(s.voiceover)+'</div>':'')+
+    '</div><div class="dur">'+Number(s.duration).toFixed(1)+T('sec')+'</div></div>'
+  ).join('');
+  return '<div class="card"><div class="card-head">'+
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z"/></svg>'+
+      '<b>'+T('enhancedPrompt')+'</b><span style="margin-inline-start:auto;font-size:11.5px">'+(plan.source==='llm'?'LLM':T('localFree'))+'</span></div>'+
+    '<div class="card-body">'+
+      '<div class="plan-title">'+esc(plan.title)+'</div>'+
+      '<div class="plan-log">'+esc(plan.logline)+'</div>'+
+      '<div class="meta-row">'+
+        '<span class="tag">'+esc(plan.style)+'</span>'+
+        '<span class="tag">'+esc(plan.pacing)+'</span>'+
+        '<span class="tag">'+esc(plan.mood)+'</span>'+
+        '<span class="swatches">'+sw+'</span>'+
+      '</div>'+
+      '<div class="scenes">'+scenes+'</div>'+
+    '</div></div>';
+}
+
+function botMsgHTML(m){
+  const d = m.data || {};
+  let html = '<div class="msg bot"><div class="av">V</div><div class="body">'+
+    '<div class="who">AI Video Agent</div>';
+  if (d.type === 'video' && d.plan){
+    html += '<div class="text">'+T('planReady')+'</div>';
+    html += planHTML(d.plan);
+    html += '<div class="card" data-job="'+esc(d.job_id||'')+'"><div class="card-body">'+
+      '<div class="progress"><div class="bar"><i></i></div>'+
+      '<div class="pmeta"><span class="pmsg">'+(d.status==='done'?T('done'):T('waiting'))+'</span><span class="ppct">'+(d.status==='done'?'100%':'0%')+'</span></div></div>'+
+      '<div class="media"></div>'+
+    '</div></div>';
+  } else {
+    html += '<div class="text">'+esc(m.content||'')+'</div>';
+  }
+  html += '</div></div>';
+  return html;
+}
+
+function wireBotMessage(m){
+  const d = m.data || {};
+  if (d.type !== 'video') return;
+  const card = $('#messages .card[data-job="'+d.job_id+'"]');
+  if (!card) return;
+  const bar = $('.bar > i', card), pmsg = $('.pmsg', card), ppct = $('.ppct', card), media = $('.media', card);
+  if (d.status === 'done' && d.video){
+    bar.style.width = '100%'; pmsg.textContent = T('done'); ppct.textContent = '100%';
+    media.innerHTML = mediaHTML(d);
+    return;
+  }
+  if (d.status === 'error'){
+    pmsg.textContent = T('failed'); ppct.textContent = '';
+    return;
+  }
+  // running: attach to live job
+  if (d.job_id) attachJob(d.job_id, bar, pmsg, ppct, media, d);
+}
+
+function mediaHTML(d){
+  const v = d.video, p = d.preview;
+  const name = (d.plan && d.plan.title ? d.plan.title : 'video').replace(/[^\p{L}\p{N}_-]+/gu,'_').slice(0,40);
+  return '<video controls playsinline src="'+esc(v)+'"></video>'+
+    (p ? '<img src="'+esc(p)+'" alt="storyboard preview" />' : '')+
+    '<div class="dl">'+
+      '<a class="btn primary" href="'+esc(v)+'" download="'+esc(name)+'.mp4">'+T('dlVideo')+'</a>'+
+      (p ? '<a class="btn" href="'+esc(p)+'" download="'+esc(name)+'_preview.png">'+T('dlPreview')+'</a>' : '')+
+    '</div>';
+}
+
+function scrollBottom(){ const s = $('#scroll'); s.scrollTop = s.scrollHeight; }
+
+/* =========================================================================
+   GENERATION FLOW
+   ========================================================================= */
+async function handleSend(){
+  const idea = $('#input').value.trim();
+  if (!idea || state.busy) return;
+  state.busy = true; updateSend();
+  $('#input').value = ''; autoGrow();
+
+  // ensure a conversation
+  let conv = activeConv();
+  if (!conv){
+    conv = { id: uid(), title: idea.slice(0,60), messages: [], created: Date.now() };
+    state.conversations.unshift(conv);
+    state.activeId = conv.id;
+  }
+  conv.messages.push({ role:'user', content: idea });
+  saveConvs(); renderSidebar(); renderMessages();
+
+  const opts = {
+    seconds: state.settings.seconds, res: state.settings.res, fps: state.settings.fps,
+    voice: state.settings.voice, music: state.settings.music, useLlm: state.settings.useLlm,
+    bitrate: 6000000
+  };
+
+  try {
+    if (state.mode === 'server' && state.token){
+      await generateServer(conv, idea, opts);
+    } else {
+      await generateLocal(conv, idea, opts);
+    }
+  } catch(err){
+    conv.messages.push({ role:'assistant', content: T('errorPrefix') + err.message });
+    saveConvs(); renderMessages();
+  } finally {
+    state.busy = false; updateSend();
+  }
+}
+
+/* ---------- local (free, in-browser) ---------- */
+async function generateLocal(conv, idea, opts){
+  const plan = optimizeHeuristic(idea, opts.seconds, null);
+  const msg = { role:'assistant', content: plan.title, data:{ type:'video', plan, status:'running', job_id:'local-'+uid() } };
+  conv.messages.push(msg);
+  saveConvs(); renderMessages();
+
+  const card = $('#messages .card[data-job="'+msg.data.job_id+'"]');
+  const bar = $('.bar > i', card), pmsg = $('.pmsg', card), ppct = $('.ppct', card), media = $('.media', card);
+
+  // 1. storyboard preview (fast, real)
+  pmsg.textContent = T('buildingPreview'); ppct.textContent = '5%'; bar.style.width = '5%';
+  await new Promise(r => setTimeout(r, 120));
+  const preview = buildStoryboard(plan, opts);
+  msg.data.preview = preview;
+  saveConvs();
+
+  // 2. render video in-browser
+  pmsg.textContent = T('rendering');
+  const { blob, ext } = await renderVideoLocal(plan, opts, (p) => {
+    const pct = Math.round(5 + p*90);
+    bar.style.width = pct + '%'; ppct.textContent = pct + '%';
+  });
+  const url = URL.createObjectURL(blob);
+  msg.data.video = url;
+  msg.data.status = 'done';
+  msg.data.ext = ext;
+  saveConvs();
+  renderMessages();
+  toast(T('doneToast'));
+}
+
+/* ---------- server (FastAPI + FFmpeg) ---------- */
+async function generateServer(conv, idea, opts){
+  const body = {
+    conversation_id: conv.serverId || null,
+    idea,
+    target_seconds: opts.seconds,
+    use_llm: opts.useLlm,
+    resolution: ({'1280x720':'720p','1920x1080':'1080p','2560x1440':'1440p','3840x2160':'4k'})[opts.res] || '1080p',
+    fps: opts.fps,
+    voice: opts.voice === 'none' ? 'en-US-AriaNeural' : opts.voice,
+    music_enabled: opts.music !== 'none',
+    music_mood: opts.music === 'none' ? 'calm' : opts.music
+  };
+  const res = await api('/api/chat', { method:'POST', body: JSON.stringify(body) });
+  conv.serverId = res.conversation_id;
+  const msg = { role:'assistant', content: res.plan.title, data:{ type:'video', plan: res.plan, status:'running', job_id: res.job_id } };
+  conv.messages.push(msg);
+  saveConvs(); renderMessages();
+
+  const card = $('#messages .card[data-job="'+res.job_id+'"]');
+  const bar = $('.bar > i', card), pmsg = $('.pmsg', card), ppct = $('.ppct', card), media = $('.media', card);
+
+  await new Promise((resolve, reject) => {
+    const es = new EventSource(apiBase() + '/api/chat/stream/' + res.job_id + '?token=' + encodeURIComponent(state.token));
+    es.onmessage = (e) => {
+      try {
+        const d = JSON.parse(e.data);
+        const pct = Math.round((d.progress||0)*100);
+        bar.style.width = pct + '%'; ppct.textContent = pct + '%';
+        if (d.message) pmsg.textContent = d.message;
+      } catch(err){}
+    };
+    es.addEventListener('end', (e) => {
+      es.close();
+      let d = {}; try { d = JSON.parse(e.data); } catch(err){}
+      if (d.status === 'done' && d.result){
+        msg.data.status = 'done';
+        msg.data.video = apiBase() + '/api/chat/jobs/' + res.job_id + '/video';
+        msg.data.preview = apiBase() + '/api/chat/jobs/' + res.job_id + '/preview';
+        msg.data.result = d.result;
+        saveConvs(); renderMessages(); toast(T('serverDoneToast'));
+      } else {
+        msg.data.status = 'error';
+        msg.content = T('failedPrefix') + (d.message || T('unknown'));
+        saveConvs(); renderMessages();
+      }
+      resolve();
+    });
+    es.onerror = () => { es.close(); reject(new Error(T('connLost'))); };
+  });
+}
+
+function attachJob(jobId, bar, pmsg, ppct, media, d){
+  if (state.mode !== 'server' || !state.token) return;
+  const es = new EventSource(apiBase() + '/api/chat/stream/' + jobId + '?token=' + encodeURIComponent(state.token));
+  es.onmessage = (e) => {
+    try {
+      const j = JSON.parse(e.data);
+      const pct = Math.round((j.progress||0)*100);
+      bar.style.width = pct + '%'; ppct.textContent = pct + '%';
+      if (j.message) pmsg.textContent = j.message;
+    } catch(err){}
+  };
+  es.addEventListener('end', (e) => {
+    es.close();
+    let j = {}; try { j = JSON.parse(e.data); } catch(err){}
+    if (j.status === 'done'){
+      d.status = 'done';
+      d.video = apiBase() + '/api/chat/jobs/' + jobId + '/video';
+      d.preview = apiBase() + '/api/chat/jobs/' + jobId + '/preview';
+      saveConvs();
+      bar.style.width = '100%'; pmsg.textContent = T('done'); ppct.textContent = '100%';
+      media.innerHTML = mediaHTML(d);
+    }
+  });
+}
+
+/* =========================================================================
+   CONVERSATION MANAGEMENT
+   ========================================================================= */
+function newChat(){
+  state.activeId = null; saveConvs(); renderSidebar(); renderMessages();
+  $('#input').value = ''; autoGrow(); updateSend(); $('#input').focus(); closeSidebar();
+}
+function deleteConv(id){
+  state.conversations = state.conversations.filter(c => c.id !== id);
+  if (state.activeId === id) state.activeId = null;
+  saveConvs(); renderSidebar(); renderMessages();
+}
+
+/* =========================================================================
+   COMPOSER
+   ========================================================================= */
+function autoGrow(){
+  const el = $('#input'); el.style.height = 'auto';
+  el.style.height = Math.min(200, el.scrollHeight) + 'px';
+}
+function updateSend(){ $('#send').disabled = state.busy || !$('#input').value.trim(); }
+
+/* =========================================================================
+   SETTINGS
+   ========================================================================= */
+function openSettings(){
+  $('#setSeconds').value = state.settings.seconds;
+  $('#setRes').value = state.settings.res;
+  $('#setFps').value = String(state.settings.fps);
+  $('#setVoice').value = state.settings.voice;
+  $('#setMusic').value = state.settings.music;
+  $('#setLlm').classList.toggle('on', !!state.settings.useLlm);
+  $('#settingsOverlay').classList.add('show');
+}
+function saveSettings(){
+  state.settings = {
+    seconds: clamp(parseInt($('#setSeconds').value)||60, 10, 600),
+    res: $('#setRes').value,
+    fps: parseInt($('#setFps').value)||30,
+    voice: $('#setVoice').value,
+    music: $('#setMusic').value,
+    useLlm: $('#setLlm').classList.contains('on')
+  };
+  LS.set('settings', state.settings);
+  $('#settingsOverlay').classList.remove('show');
+  toast(T('settingsSaved'));
+}
+
+/* =========================================================================
+   ACCOUNT / SERVER MODE
+   ========================================================================= */
+let acctTab = 'login';
+function openAccount(){
+  $('#acctServer').value = state.serverUrl || '';
+  if (state.user){
+    $('#acctTitle').textContent = T('yourAccount');
+    $('#acctSub').textContent = state.user.email;
+    $('#acctTabs').style.display = 'none';
+    $('#nameField').style.display = 'none';
+    $('#acctEmail').parentElement.style.display = 'none';
+    $('#acctPass').parentElement.style.display = 'none';
+    $('#acctSubmit').textContent = T('logout');
+    $('#acctNote').innerHTML = T('connectedTo')+'<b>'+esc(state.serverUrl||'—')+'</b><br/>'+T('savedOnServer');
+  } else {
+    $('#acctTitle').textContent = T('account');
+    $('#acctSub').textContent = T('acctSubLogin');
+    $('#acctTabs').style.display = 'flex';
+    $('#acctEmail').parentElement.style.display = 'block';
+    $('#acctPass').parentElement.style.display = 'block';
+    $('#nameField').style.display = acctTab === 'signup' ? 'block' : 'none';
+    $('#acctSubmit').textContent = acctTab === 'signup' ? T('signup') : T('login');
+    $('#acctNote').innerHTML = T('noLoginNote');
+  }
+  $('#acctErr').textContent = '';
+  $('#accountOverlay').classList.add('show');
+}
+async function submitAccount(){
+  if (state.user){ // logout
+    try { await api('/api/auth/logout', { method:'POST' }); } catch(e){}
+    state.token = ''; state.user = null; LS.del('token'); LS.del('user');
+    state.mode = 'local'; LS.set('mode','local'); updateModeUI();
+    $('#accountOverlay').classList.remove('show'); toast(T('loggedOut'));
+    return;
+  }
+  const email = $('#acctEmail').value.trim();
+  const pass = $('#acctPass').value;
+  const name = $('#acctName').value.trim();
+  if (!email || !pass){ $('#acctErr').textContent = T('enterEmailPass'); return; }
+  const srv = $('#acctServer').value.trim();
+  if (srv){ state.serverUrl = srv; LS.set('serverUrl', srv); }
+  try {
+    const path = acctTab === 'signup' ? '/api/auth/signup' : '/api/auth/login';
+    const res = await api(path, { method:'POST', body: JSON.stringify({ email, password: pass, name }) });
+    state.token = res.token; state.user = res.user;
+    LS.set('token', state.token); LS.set('user', state.user);
+    state.mode = 'server'; LS.set('mode','server'); updateModeUI();
+    $('#accountOverlay').classList.remove('show');
+    toast(T('welcome') + res.user.name);
+    await syncConversations();
+  } catch(err){
+    $('#acctErr').textContent = err.message;
+  }
+}
+async function syncConversations(){
+  try {
+    const res = await api('/api/conversations');
+    // merge server conversations into local list (server wins for titles)
+    res.conversations.forEach(sc => {
+      if (!state.conversations.find(c => c.serverId === sc.id)){
+        state.conversations.push({ id: uid(), serverId: sc.id, title: sc.title, messages: [], created: sc.created_at*1000 });
+      }
+    });
+    saveConvs(); renderSidebar();
+  } catch(e){}
+}
+
+function updateModeUI(){
+  const server = state.mode === 'server' && state.token;
+  $('#modeDot').classList.toggle('off', !server);
+  $('#modeLabel').textContent = server ? T('serverEngine') : T('localEngine');
+  $('#engineChip').textContent = server ? T('serverChip') : T('freeChip');
+  $('#acctLabel').textContent = state.user ? state.user.name : T('account');
+}
+
+/* =========================================================================
+   SIDEBAR (mobile)
+   ========================================================================= */
+function openSidebar(){ $('#sidebar').classList.add('open'); $('#backdrop').classList.add('show'); }
+function closeSidebar(){ $('#sidebar').classList.remove('open'); $('#backdrop').classList.remove('show'); }
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+function init(){
+  applyLang();
+  renderSidebar();
+  renderMessages();
+  updateSend();
+
+  $('#input').addEventListener('input', () => { autoGrow(); updateSend(); });
+  $('#input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); handleSend(); }
+  });
+  $('#send').onclick = handleSend;
+  $('#newChat').onclick = newChat;
+  $('#hamburger').onclick = openSidebar;
+  $('#backdrop').onclick = closeSidebar;
+  $('#openSettings').onclick = openSettings;
+  $('#topSettings').onclick = openSettings;
+  $('#settingsClose').onclick = () => $('#settingsOverlay').classList.remove('show');
+  $('#settingsSave').onclick = saveSettings;
+  $('#setLlm').onclick = () => $('#setLlm').classList.toggle('on');
+  $('#openAccount').onclick = openAccount;
+  $('#acctClose').onclick = () => $('#accountOverlay').classList.remove('show');
+  $('#acctSubmit').onclick = submitAccount;
+  $$('#acctTabs button').forEach(b => b.onclick = () => {
+    acctTab = b.dataset.tab;
+    $$('#acctTabs button').forEach(x => x.classList.toggle('on', x === b));
+    $('#nameField').style.display = acctTab === 'signup' ? 'block' : 'none';
+    $('#acctSubmit').textContent = acctTab === 'signup' ? T('signup') : T('login');
+  });
+  $('#attachBtn').onclick = () => $('#fileInput').click();
+  $('#fileInput').onchange = (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => { $('#input').value = String(r.result).slice(0, 4000); autoGrow(); updateSend(); toast(T('scriptImported')); };
+    r.readAsText(f);
+    e.target.value = '';
+  };
+  $$('.overlay').forEach(o => o.onclick = (e) => { if (e.target === o) o.classList.remove('show'); });
+
+  // auto-detect a backend on the same origin (when served by FastAPI)
+  if (location.protocol.startsWith('http')){
+    fetch('/api/health').then(r => r.ok ? r.json() : null).then(j => {
+      if (j && j.ok){
+        state.serverUrl = location.origin;
+        LS.set('serverUrl', state.serverUrl);
+        if (state.token){
+          api('/api/auth/me').then(res => {
+            state.user = res.user; LS.set('user', res.user);
+            state.mode = 'server'; LS.set('mode','server'); updateModeUI();
+            syncConversations();
+          }).catch(() => { state.token=''; LS.del('token'); });
+        }
+      }
+    }).catch(() => {});
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+})();
+
+</script>
+</body>
+</html>
